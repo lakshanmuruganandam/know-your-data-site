@@ -42,7 +42,6 @@ npm run build && npm start
 ## Deploy
 
 ```bash
-git remote add origin https://github.com/lakshanmuruganandam/know-your-data.git
 gh repo create lakshanmuruganandam/know-your-data --public --source=. --push
 npx vercel@latest           # link + preview
 npx vercel@latest --prod    # production → know-your-data.vercel.app
