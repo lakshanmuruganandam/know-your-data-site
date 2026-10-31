@@ -43,15 +43,15 @@ export const toneBorder: Record<Tone, string> = {
 };
 
 /* ── Redacted: text sits under a black bar that slides away on view ── */
-export function Redacted({ children, delay = 0, className, bar = "bg-ink" }: { children: ReactNode; delay?: number; className?: string; bar?: string }) {
+export function Redacted({ children, delay = 0, className, bar = "bg-crimson" }: { children: ReactNode; delay?: number; className?: string; bar?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-10% 0px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -3% 0px" });
   return (
     <span ref={ref} className={cn("relative inline-block", className)}>
       <motion.span
         initial={{ opacity: 0 }}
         animate={inView ? { opacity: 1 } : {}}
-        transition={{ delay: delay + 0.35, duration: 0.01 }}
+        transition={{ delay: delay + 0.26, duration: 0.01 }}
       >
         {children}
       </motion.span>
@@ -60,7 +60,7 @@ export function Redacted({ children, delay = 0, className, bar = "bg-ink" }: { c
         className={cn("absolute inset-y-[8%] left-0 right-0 origin-right", bar)}
         initial={{ scaleX: 0, originX: 0 }}
         animate={inView ? { scaleX: [0, 1, 1, 0], originX: [0, 0, 1, 1] } : {}}
-        transition={{ delay, duration: 0.9, times: [0, 0.4, 0.5, 1], ease }}
+        transition={{ delay, duration: 0.65, times: [0, 0.4, 0.5, 1], ease }}
       />
     </span>
   );
@@ -70,7 +70,7 @@ export function Redacted({ children, delay = 0, className, bar = "bg-ink" }: { c
 const NOISE = "!<>-_\\/[]{}—=+*^?#01▓▒░ABCDEFX";
 export function Decrypt({ text, delay = 0, className }: { text: string; delay?: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-5% 0px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -3% 0px" });
   const words = text.split(" ");
   useEffect(() => {
     const root = ref.current;
@@ -82,7 +82,7 @@ export function Decrypt({ text, delay = 0, className }: { text: string; delay?: 
       let busy = false;
       spans.forEach((el, wi) => {
         const word = el.dataset.w!;
-        const p = Math.max(0, Math.min(1, (t - start - wi * 90) / 650));
+        const p = Math.max(0, Math.min(1, (t - start - wi * 70) / 480));
         if (p < 1) busy = true;
         const fixed = Math.floor(p * word.length);
         let out = word.slice(0, fixed);
@@ -103,7 +103,7 @@ export function Decrypt({ text, delay = 0, className }: { text: string; delay?: 
             className="inline-block"
             initial={{ y: "110%", rotate: 4 }}
             animate={inView ? { y: 0, rotate: 0 } : {}}
-            transition={{ delay: delay + i * 0.08, duration: 0.9, ease }}
+            transition={{ delay: delay + i * 0.06, duration: 0.7, ease }}
           >
             {w}
           </motion.span>
@@ -159,10 +159,10 @@ export function Reveal({ children, i = 0, className }: { children: ReactNode; i?
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+      initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
       whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      viewport={{ once: true, margin: "-8% 0px" }}
-      transition={{ delay: i * 0.06, duration: 0.8, ease }}
+      viewport={{ once: true, margin: "0px 0px -3% 0px" }}
+      transition={{ delay: i * 0.05, duration: 0.6, ease }}
     >
       {children}
     </motion.div>

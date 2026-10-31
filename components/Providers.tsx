@@ -3,7 +3,7 @@
 import Lenis from "lenis";
 import { motion, useScroll, useSpring } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Intro } from "@/components/Intro";
 import { ShadowProvider } from "@/lib/shadow";
 
@@ -16,21 +16,32 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [introDone, setIntroDone] = useState(false);
   const done = useCallback(() => setIntroDone(true), []);
 
+  const lenis = useRef<Lenis | null>(null);
   useEffect(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 1 });
+    const l = new Lenis({ lerp: 0.1, wheelMultiplier: 1, anchors: { offset: -96 } });
+    lenis.current = l;
     let id = requestAnimationFrame(function raf(t) {
-      lenis.raf(t);
+      l.raf(t);
       id = requestAnimationFrame(raf);
     });
     return () => {
       cancelAnimationFrame(id);
-      lenis.destroy();
+      l.destroy();
+      lenis.current = null;
     };
   }, []);
 
+  // the page underneath the cold open stays put until it lifts
   useEffect(() => {
-    window.scrollTo(0, 0);
+    if (introDone) lenis.current?.start();
+    else lenis.current?.stop();
+  }, [introDone]);
+
+  // new route starts at the top; go through Lenis so its target doesn't drag the page back
+  useEffect(() => {
+    if (lenis.current) lenis.current.scrollTo(0, { immediate: true, force: true });
+    else window.scrollTo(0, 0);
   }, [path]);
 
   return (

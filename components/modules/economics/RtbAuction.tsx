@@ -31,7 +31,7 @@ export function RtbAuction() {
   const [running, setRunning] = useState(false);
   const [bids, setBids] = useState<Bid[]>([]);
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-20% 0px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -3% 0px" });
   const started = useRef(false);
 
   const start = useCallback(() => {
@@ -166,7 +166,7 @@ export function RtbAuction() {
         {/* bid request */}
         <div className="overflow-hidden rounded-xl border border-line bg-void/80" data-ghost="bid request contains your fingerprint · copied to every bidder, winner or not">
           <div className="border-b border-line px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-3">bid_request.json · sent to all {BIDDERS.length}</div>
-          <pre className="max-h-48 overflow-auto p-4 font-mono text-[11.5px] leading-relaxed text-ink-2">
+          <pre data-lenis-prevent className="max-h-48 overflow-auto overscroll-contain p-4 font-mono text-[11.5px] leading-relaxed text-ink-2">
             {"{\n"}
             {live.map((f) => (
               <span key={f.id}>

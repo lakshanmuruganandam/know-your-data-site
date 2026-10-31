@@ -171,7 +171,7 @@ export function ToolsExplorer() {
                 /* cards flip in on their vertical axis like dealt index cards, staggered across the row */
                 initial={{ opacity: 0, rotateY: -72, x: -16, scale: 0.96 }}
                 whileInView={{ opacity: 1, rotateY: 0, x: 0, scale: 1 }}
-                viewport={{ once: true, margin: "-4% 0px" }}
+                viewport={{ once: true, margin: "0px 0px -3% 0px" }}
                 exit={reduce ? { opacity: 0, transition: { duration: 0.1 } } : { opacity: 0, rotateY: 70, scale: 0.94, transition: { duration: 0.2 } }}
                 transition={reduce ? { duration: 0 } : { ...spring, delay: (i % 3) * 0.08, opacity: { duration: 0.3, delay: (i % 3) * 0.08 } }}
                 style={{ transformPerspective: 1100, originX: 0 }}

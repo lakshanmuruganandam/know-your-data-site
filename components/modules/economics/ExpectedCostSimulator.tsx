@@ -314,7 +314,7 @@ function Glyph({ i, children }: { i: number; children: ReactNode }) {
       className="inline-flex"
       initial={{ x: o.x, y: o.y, rotate: o.r, opacity: 0, filter: "blur(8px)" }}
       whileInView={{ x: 0, y: 0, rotate: 0, opacity: 1, filter: "blur(0px)" }}
-      viewport={{ once: true, margin: "-10% 0px" }}
+      viewport={{ once: true, margin: "0px 0px -3% 0px" }}
       transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 15, delay: 0.1 + i * 0.07 }}
     >
       {children}

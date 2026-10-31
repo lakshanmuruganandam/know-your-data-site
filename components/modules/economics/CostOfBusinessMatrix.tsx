@@ -18,7 +18,7 @@ export function CostOfBusinessMatrix() {
   const [base, setBase] = useState<Base>("rev");
   const [sel, setSel] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-15% 0px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -3% 0px" });
 
   const baseAmt = base === "rev" ? META_REVENUE_2025 : META_NET_INCOME_2025;
   const perCell = baseAmt / (GRID * GRID);

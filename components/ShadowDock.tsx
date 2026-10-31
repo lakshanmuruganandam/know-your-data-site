@@ -55,7 +55,7 @@ export function ShadowDock() {
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 260, damping: 30 }}
               data-lenis-prevent
-              className="fixed inset-y-0 right-0 z-[66] flex w-full max-w-[440px] flex-col overflow-y-auto border-l border-line bg-carbon/95 backdrop-blur-xl"
+              className="fixed inset-y-0 right-0 z-[66] flex w-full max-w-[440px] flex-col overflow-y-auto overscroll-contain border-l border-line bg-carbon/95 backdrop-blur-xl"
             >
               <div className="scanlines pointer-events-none absolute inset-0 opacity-40" />
               <div className="relative flex items-start justify-between border-b border-line p-6">

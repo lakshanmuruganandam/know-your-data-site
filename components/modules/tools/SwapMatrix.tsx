@@ -37,7 +37,7 @@ export function SwapMatrix({ active, onPick }: { active: Category | "All"; onPic
             type="button"
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-5% 0px" }}
+            viewport={{ once: true, margin: "0px 0px -3% 0px" }}
             transition={{ delay: (i % 4) * 0.06, duration: 0.6, ease }}
             whileTap={{ scale: 0.98 }}
             onMouseEnter={() => enter(s.bigTech)}

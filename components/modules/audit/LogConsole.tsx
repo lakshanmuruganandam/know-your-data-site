@@ -22,7 +22,7 @@ export function LogConsole({ lines, running }: { lines: LogLine[]; running: bool
       // CRT power-on: a bright horizontal line snaps open, flickers, then settles
       initial={{ scaleY: 0.012, scaleX: 0.7, opacity: 0, filter: "brightness(3)" }}
       whileInView={reduce ? { scaleY: 1, scaleX: 1, opacity: 1, filter: "brightness(1)" } : { scaleY: [0.012, 0.012, 1, 1, 1], scaleX: [0.7, 1, 1, 1, 1], opacity: [0, 1, 1, 0.55, 1], filter: ["brightness(3)", "brightness(3)", "brightness(1.6)", "brightness(0.8)", "brightness(1)"] }}
-      viewport={{ once: true, margin: "-5% 0px" }}
+      viewport={{ once: true, margin: "0px 0px -3% 0px" }}
       transition={reduce ? { duration: 0 } : { duration: 0.9, times: [0, 0.18, 0.5, 0.7, 1], ease: "easeOut" }}
     >
       <span aria-hidden className="ticks pointer-events-none absolute inset-0" />
@@ -40,6 +40,7 @@ export function LogConsole({ lines, running }: { lines: LogLine[]; running: bool
         aria-live="polite"
         aria-label="Scan log"
         tabIndex={0}
+        data-lenis-prevent
         className="scanlines h-60 overflow-y-auto overscroll-contain px-3 py-2 font-mono text-[11.5px] leading-[1.65] focus-visible:outline-2 focus-visible:outline-cyan sm:h-72"
       >
         {lines.map((l) => (

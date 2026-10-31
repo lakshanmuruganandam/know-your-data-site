@@ -84,7 +84,9 @@ export function GhostLens() {
     const describe = (e: Element) => {
       const tagName = e.tagName.toLowerCase();
       const cls = (e.getAttribute("class") || "").split(/\s+/).filter((c) => c && !c.includes(":") && !c.includes("[")).slice(0, 1);
-      const txt = (e.textContent || "").trim().replace(/\s+/g, " ").slice(0, 22);
+      // first rendered line only, so stacked blocks don't run together ("DATAA Millen…")
+      const line = ((e as HTMLElement).innerText || "").split("\n").map((l) => l.trim()).find(Boolean) ?? "";
+      const txt = line.length > 24 ? line.slice(0, 23) + "…" : line;
       return `${tagName}${cls.length ? "." + cls[0] : ""}${txt ? ` "${txt}"` : ""}`;
     };
 
@@ -94,7 +96,7 @@ export function GhostLens() {
       events++;
       if (!visible) {
         visible = true;
-        el.style.opacity = "1";
+        el.style.opacity = retracted ? "0.25" : "1";
       }
       probe();
     };
@@ -133,7 +135,11 @@ export function GhostLens() {
       el.animate([{ transform: "scale(1)" }, { transform: "scale(.96)" }, { transform: "scale(1)" }], { duration: 260 });
     };
     let lastScrollLog = 0;
+    // while the page is moving the lens retracts so it never sits on what you're scrolling to
+    let scrollingUntil = 0;
+    let retracted = false;
     const onScroll = () => {
+      scrollingUntil = performance.now() + 420;
       if (visible) probe();
       const now = performance.now();
       if (now - lastScrollLog < 400) return;
@@ -147,7 +153,12 @@ export function GhostLens() {
       lastT = t;
       cx += (x - cx) * 0.22;
       cy += (y - cy) * 0.22;
-      r += (targetR - r) * 0.12;
+      const moving = t < scrollingUntil;
+      if (moving !== retracted) {
+        retracted = moving;
+        if (visible) el.style.opacity = moving ? "0.25" : "1";
+      }
+      r += ((moving ? targetR * 0.4 : targetR) - r) * (moving ? 0.25 : 0.12);
       const inst = (Math.hypot(x - lx, y - ly) / dt) * 1000;
       vel += (inst - vel) * 0.1;
       lx = x;

@@ -33,7 +33,7 @@ export const CaseFolder = forwardRef<HTMLLIElement, { c: VaultCase; onOpen: () =
       /* files slide up out of the cabinet: hinged at the bottom edge, tilted back in 3D, staggered per column */
       initial={{ opacity: 0, y: 70, rotateX: -62, scale: 0.94 }}
       whileInView={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-6% 0px" }}
+      viewport={{ once: true, margin: "0px 0px -3% 0px" }}
       exit={{ opacity: 0, scale: 0.92, filter: "blur(6px)" }}
       transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 140, damping: 20, mass: 0.9, delay: (index % 3) * 0.09 }}
       style={{ transformPerspective: 900, originY: 1 }}

@@ -153,7 +153,7 @@ function Converge({ p, i, n, t, w, h }: { p: Packet; i: number; n: number; t: MV
 }
 
 function ParamLine({ line, i, t }: { line: string; i: number; t: MV }) {
-  const s = 0.48 + i * 0.035;
+  const s = 0.37 + i * 0.03;
   const k = useTransform(t, [s, s + 0.05], [0, 100]);
   const clipPath = useTransform(k, (v) => `inset(0 ${100 - v}% 0 0)`);
   const opacity = useTransform(t, [s - 0.005, s], [0, 1]);
@@ -183,7 +183,7 @@ export function ScenePixel({ t, packets }: SceneProps) {
   const pulseO = useTransform(t, [0.14, 0.18, 0.27], [0, 0.8, 0]);
   const panelS = useTransform(() => 0.006 + 0.994 * easeInOut(win(t.get(), 0.27, 0.47)));
   const panelO = useTransform(t, [0.26, 0.275], [0, 1]);
-  const metaO = useTransform(t, [0.42, 0.48], [0, 1]);
+  const metaO = useTransform(t, [0.33, 0.38], [0, 1]);
   return (
     <div ref={ref} className="absolute inset-0">
       {packets.map((p, i) => (

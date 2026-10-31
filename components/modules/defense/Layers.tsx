@@ -165,7 +165,7 @@ function Armour({ active, onSelect }: { active: number; onSelect: (i: number) =>
                   strokeWidth={g.w}
                   initial={{ x: f.dx, y: f.dy, rotate: f.rot, opacity: 0 }}
                   whileInView={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
-                  viewport={{ once: true, margin: "-10% 0px" }}
+                  viewport={{ once: true, margin: "0px 0px -3% 0px" }}
                   transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 110, damping: 16, delay: 0.15 + (RINGS.length - 1 - i) * 0.16 + k * 0.035 }}
                 />
               ))}

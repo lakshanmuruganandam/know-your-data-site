@@ -306,7 +306,7 @@ export function Proof() {
             {items.map(({ icon: Icon, k, v, good }) => (
               <div key={k} className="bg-void p-5">
                 <Icon size={16} className={good ? "text-lime" : "text-crimson"} />
-                <div className={cn("mt-4 font-display text-4xl font-extrabold tabular-nums", good ? "text-lime text-glow-lime" : "text-crimson")}>{v}</div>
+                <div className={cn("mt-4 whitespace-nowrap font-display text-3xl font-extrabold tabular-nums sm:text-4xl", good ? "text-lime text-glow-lime" : "text-crimson")}>{v}</div>
                 <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-3">{k}</div>
               </div>
             ))}

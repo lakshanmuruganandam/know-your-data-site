@@ -255,7 +255,7 @@ export function RequestGenerator() {
         <motion.div
           initial={{ y: -48, clipPath: "inset(0% 0% 100% 0%)" }}
           whileInView={{ y: 0, clipPath: "inset(-20% -20% -20% -20%)" }}
-          viewport={{ once: true, margin: "-10% 0px" }}
+          viewport={{ once: true, margin: "0px 0px -3% 0px" }}
           transition={reduce ? { duration: 0 } : { duration: 1.1, ease: [0.65, 0, 0.35, 1] }}
         >
         <div
