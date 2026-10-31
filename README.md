@@ -51,7 +51,7 @@ npm run build && npm start
 ## Deploy
 
 ```bash
-gh repo create lakshanmuruganandam/know-your-data --public --source=. --push
+gh repo create lakshanmuruganandam/know-your-data-site --public --source=. --push
 npx vercel@latest           # link + preview
 npx vercel@latest --prod    # production → know-your-data.vercel.app
 ```
