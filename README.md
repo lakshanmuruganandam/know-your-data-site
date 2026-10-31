@@ -1,5 +1,7 @@
 # Know Your Data
 
+**Live:** https://knowyourdata26.vercel.app
+
 An interactive privacy-intelligence platform from the **Millennium Fellowship 2026** cohort at **IIT Delhi Abu Dhabi**.
 Built by Lakshan Muruganandam, Aditya Rajan Sharma and Krishna. Research by Anesh, Divisha, Divya Nukala and Krishna Gaur (case studies), Saatvik, Divyam and Gauri (economics), and Lakshan, Farha and Sumayya (strategies).
 
