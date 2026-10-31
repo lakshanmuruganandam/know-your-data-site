@@ -66,12 +66,14 @@ export function Navigation() {
             <button
               onClick={() => setGhost(!ghost)}
               title="Toggle the Ghost Lens (G)"
+              aria-label="Toggle the ghost lens"
+              aria-pressed={ghost}
               className={cn(
-                "hidden items-center gap-1.5 rounded-full border px-3 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors md:flex",
+                "flex items-center gap-1.5 rounded-full border px-2.5 py-2 font-mono text-[10.5px] uppercase tracking-[0.16em] transition-colors md:px-3",
                 ghost ? "border-crimson/40 text-crimson" : "border-line text-ink-3",
               )}
             >
-              {ghost ? <Eye size={13} /> : <EyeOff size={13} />} Lens
+              {ghost ? <Eye size={13} /> : <EyeOff size={13} />} <span className="hidden md:inline">Lens</span>
             </button>
             <motion.button
               whileTap={{ scale: 0.96 }}

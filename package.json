@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:functions": "node tests/e2e/functions.mjs http://localhost:3000 desktop && node tests/e2e/functions.mjs http://localhost:3000 phone",
+    "test:scroll": "node tests/e2e/scroll-audit.mjs http://localhost:3000 375,768,1440,2000"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -26,6 +28,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.28",
+    "playwright": "^1.64.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

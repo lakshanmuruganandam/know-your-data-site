@@ -87,7 +87,7 @@ export function TwoLayers() {
               hesitation; ad-tech turns them into segments and sells them in auctions that finish before the page loads.
             </p>
             <p className="mt-4 max-w-lg leading-relaxed text-ink-3">
-              Here, the second layer is <span className="text-ink">made visible</span>. Your cursor is a lens onto it. The dossier on the right
+              Here, the second layer is <span className="text-ink">made visible</span>. <span className="pointer-coarse:hidden">Your cursor is a lens onto it.</span><span className="hidden pointer-coarse:inline">The eye in the bar opens a lens onto it.</span> The dossier on the right
               edge fills itself from your real browser. Then you learn to redact it — for real.
             </p>
           </Reveal>

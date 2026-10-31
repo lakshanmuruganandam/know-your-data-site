@@ -110,7 +110,7 @@ export function Hero() {
           className="glass ticks mt-10 max-w-xl rounded-xl p-5"
           data-ghost="read dossier panel → curiosity score 0.91"
         >
-          <div className="mb-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-ink-3">
+          <div className="mb-3 flex items-center justify-between gap-3 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.14em] text-ink-3 sm:text-[10px] sm:tracking-[0.22em]">
             <span className="flex items-center gap-2 text-crimson">
               <ScanLine size={12} /> profile compiled in-tab
             </span>
@@ -148,10 +148,11 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.6 }}
-          className="mt-10 hidden max-w-md items-center gap-2 font-mono text-[11px] leading-relaxed text-ink-3 md:flex"
+          className="mt-10 flex max-w-md items-center gap-2 font-mono text-[11px] leading-relaxed text-ink-3"
         >
           <ArrowDownRight size={14} className="shrink-0 text-cyan" />
-          Your cursor is a shield — and a lens. Move it over anything to see what a tracker would log. Press G to toggle.
+          <span className="pointer-coarse:hidden">Your cursor is a shield — and a lens. Move it over anything to see what a tracker would log. Press G to toggle.</span>
+          <span className="hidden pointer-coarse:inline">Tap anywhere to throw up a shield. Tap the eye in the bar to open the ghost lens, then drag it over anything to see what a tracker would log.</span>
         </motion.p>
       </div>
     </section>

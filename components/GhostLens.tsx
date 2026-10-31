@@ -18,10 +18,16 @@ import { useShadow } from "@/lib/shadow";
 
 const R = 120;
 const R_HOT = 160;
+// phones: a smaller scope you drag with a finger while the page scrolls beneath it
+const R_TOUCH = 64;
+const R_TOUCH_HOT = 82;
 
 export function GhostLens() {
   const { ghost, setGhost, fields, redacted } = useShadow();
   const [enabled, setEnabled] = useState(false);
+  const [touch, setTouch] = useState(false);
+  const handle = useRef<HTMLDivElement>(null);
+  const strip = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const tele = useRef<HTMLDivElement>(null);
   const infer = useRef<HTMLDivElement>(null);
@@ -31,13 +37,16 @@ export function GhostLens() {
 
   fieldsRef.current = fields.filter((f) => !redacted.has(f.id)).map((f) => `${f.label.toLowerCase()}=${f.value}`);
 
-  // only on devices with a real mouse
+  // mouse → lens follows the cursor; touch → a draggable scope, off until the visitor opens it
   useEffect(() => {
     const mq = matchMedia("(hover: hover) and (pointer: fine)");
-    const set = () => setEnabled(mq.matches);
+    const set = () => setTouch(!mq.matches);
     set();
+    if (!mq.matches) setGhost(false);
+    setEnabled(true);
     mq.addEventListener("change", set);
     return () => mq.removeEventListener("change", set);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // "G" toggles the lens
@@ -54,14 +63,16 @@ export function GhostLens() {
   useEffect(() => {
     if (!enabled || !ghost) return;
     const el = root.current!;
-    let x = -999,
-      y = -999,
+    const R0 = touch ? R_TOUCH : R;
+    const RH = touch ? R_TOUCH_HOT : R_HOT;
+    let x = touch ? innerWidth * 0.5 : -999,
+      y = touch ? innerHeight * 0.56 : -999,
       lx = x,
       ly = y,
       cx = x,
       cy = y,
-      r = R,
-      targetR = R,
+      r = R0,
+      targetR = R0,
       vel = 0,
       events = 0,
       clicks = 0,
@@ -71,7 +82,8 @@ export function GhostLens() {
       hoverSince = performance.now(),
       current: Element | null = null,
       currentGhost: string | null = null,
-      lastLog = 0;
+      lastLog = 0,
+      lsy = scrollY;
     const t0 = performance.now();
     const lines: string[] = [];
 
@@ -79,6 +91,7 @@ export function GhostLens() {
       lines.unshift(s);
       if (lines.length > 6) lines.pop();
       if (log.current) log.current.textContent = lines.join("\n");
+      if (strip.current && !s.startsWith("scroll")) strip.current.textContent = s;
     };
 
     const describe = (e: Element) => {
@@ -91,6 +104,7 @@ export function GhostLens() {
     };
 
     const onMove = (e: PointerEvent) => {
+      if (touch) return;
       x = e.clientX;
       y = e.clientY;
       events++;
@@ -102,7 +116,7 @@ export function GhostLens() {
     };
     // what's under the lens changes on scroll too, not just on pointer moves
     const probe = () => {
-      const under = document.elementFromPoint(x, y);
+      const under = document.elementsFromPoint(x, y).find((n) => !el.contains(n)) ?? null;
       if (under && under !== current) {
         current = under;
         hoverSince = performance.now();
@@ -110,7 +124,7 @@ export function GhostLens() {
         const msg = g?.getAttribute("data-ghost") ?? null;
         if (msg !== currentGhost) {
           currentGhost = msg;
-          targetR = msg ? R_HOT : R;
+          targetR = msg ? RH : R0;
           if (infer.current) {
             infer.current.textContent = msg ?? "";
             infer.current.style.opacity = msg ? "1" : "0";
@@ -121,17 +135,18 @@ export function GhostLens() {
         const now = performance.now();
         if (now - lastLog > 220) {
           lastLog = now;
-          push(`hover  ${describe(under)}`);
+          push(`${touch ? "lens " : "hover"}  ${describe(under)}`);
         }
       }
     };
     const onLeave = () => {
+      if (touch) return;
       visible = false;
       el.style.opacity = "0";
     };
-    const onDown = () => {
+    const onDown = (e: PointerEvent) => {
       clicks++;
-      push(`click  #${clicks} @ ${Math.round(x)},${Math.round(y)}`);
+      push(`${e.pointerType === "touch" ? "tap" : "click"}  #${clicks} @ ${Math.round(e.clientX)},${Math.round(e.clientY)}`);
       el.animate([{ transform: "scale(1)" }, { transform: "scale(.96)" }, { transform: "scale(1)" }], { duration: 260 });
     };
     let lastScrollLog = 0;
@@ -153,13 +168,16 @@ export function GhostLens() {
       lastT = t;
       cx += (x - cx) * 0.22;
       cy += (y - cy) * 0.22;
-      const moving = t < scrollingUntil;
+      // the scope stays put on phones — reading what slides under it is the point
+      const moving = !touch && t < scrollingUntil;
       if (moving !== retracted) {
         retracted = moving;
         if (visible) el.style.opacity = moving ? "0.25" : "1";
       }
       r += ((moving ? targetR * 0.4 : targetR) - r) * (moving ? 0.25 : 0.12);
-      const inst = (Math.hypot(x - lx, y - ly) / dt) * 1000;
+      const sy = scrollY;
+      const inst = touch ? (Math.abs(sy - lsy) / dt) * 1000 : (Math.hypot(x - lx, y - ly) / dt) * 1000;
+      lsy = sy;
       vel += (inst - vel) * 0.1;
       lx = x;
       ly = y;
@@ -181,6 +199,36 @@ export function GhostLens() {
       raf = requestAnimationFrame(tick);
     };
 
+    // drag the scope by its centre
+    const h = handle.current;
+    const onGrab = (e: PointerEvent) => {
+      e.preventDefault();
+      h?.setPointerCapture(e.pointerId);
+      const dx = x - e.clientX,
+        dy = y - e.clientY;
+      const drag = (m: PointerEvent) => {
+        x = Math.min(innerWidth - 8, Math.max(8, m.clientX + dx));
+        y = Math.min(innerHeight - 8, Math.max(64, m.clientY + dy));
+        events++;
+        probe();
+      };
+      const drop = () => {
+        h?.removeEventListener("pointermove", drag);
+        h?.removeEventListener("pointerup", drop);
+        h?.removeEventListener("pointercancel", drop);
+      };
+      h?.addEventListener("pointermove", drag);
+      h?.addEventListener("pointerup", drop);
+      h?.addEventListener("pointercancel", drop);
+    };
+    if (touch) {
+      visible = true;
+      el.style.opacity = "1";
+      cx = x;
+      cy = y;
+      h?.addEventListener("pointerdown", onGrab);
+      probe();
+    }
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("pointerdown", onDown, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -189,12 +237,13 @@ export function GhostLens() {
     push("session_start  replay.rec ● (local only)");
     return () => {
       cancelAnimationFrame(raf);
+      h?.removeEventListener("pointerdown", onGrab);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerdown", onDown);
       window.removeEventListener("scroll", onScroll);
       document.documentElement.removeEventListener("pointerleave", onLeave);
     };
-  }, [enabled, ghost]);
+  }, [enabled, ghost, touch]);
 
   if (!enabled || !ghost) return null;
 
@@ -203,7 +252,7 @@ export function GhostLens() {
       ref={root}
       aria-hidden
       className="pointer-events-none fixed inset-0 z-[55] opacity-0 transition-opacity duration-300"
-      style={{ ["--lx" as string]: "-999px", ["--ly" as string]: "-999px", ["--lr" as string]: `${R}px` }}
+      style={{ ["--lx" as string]: "-999px", ["--ly" as string]: "-999px", ["--lr" as string]: `${touch ? R_TOUCH : R}px` }}
     >
       {/* the X-ray: real page beneath, re-filtered, clipped to the lens */}
       <div
@@ -226,7 +275,7 @@ export function GhostLens() {
         />
         {/* telemetry inside the lens */}
         <div
-          className="absolute whitespace-pre font-mono text-[9.5px] leading-[1.45] text-crimson"
+          className={`absolute whitespace-pre font-mono leading-[1.45] text-crimson ${touch ? "text-[7.5px]" : "text-[9.5px]"}`}
           style={{ left: "calc(var(--lx) - var(--lr) * .62)", top: "calc(var(--ly) - var(--lr) * .55)" }}
           ref={tele}
         />
@@ -251,17 +300,37 @@ export function GhostLens() {
         <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.25em] text-crimson">
           ● REC · ghost layer
         </span>
+        {touch && (
+          <div
+            ref={handle}
+            className="pointer-events-auto absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 touch-none rounded-full"
+            aria-label="Drag the ghost lens"
+          />
+        )}
       </div>
 
-      {/* inference tag (what the tracker concluded) */}
+      {/* inference tag (what the tracker concluded) — beside the lens on desktop, a bottom strip on phones */}
       <div
         ref={tag}
-        className="absolute max-w-[300px] opacity-0 transition-opacity duration-200"
-        style={{ left: "calc(var(--lx) + var(--lr) + 10px)", top: "calc(var(--ly) - 14px)" }}
+        className={
+          touch
+            ? "absolute inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] opacity-0 transition-opacity duration-200"
+            : "absolute max-w-[300px] opacity-0 transition-opacity duration-200"
+        }
+        style={touch ? undefined : { left: "calc(var(--lx) + var(--lr) + 10px)", top: "calc(var(--ly) - 14px)" }}
       >
         <div className="mb-1 font-mono text-[9px] uppercase tracking-[0.25em] text-crimson/70">inference logged</div>
         <div ref={infer} className="rounded-md border border-crimson/40 bg-void/90 px-2.5 py-1.5 font-mono text-[11px] leading-snug text-crimson" />
       </div>
+
+      {/* phones: the latest logged event, pinned under the scope */}
+      {touch && (
+        <div
+          ref={strip}
+          className="absolute left-1/2 max-w-[80vw] -translate-x-1/2 truncate rounded bg-void/80 px-2 py-0.5 font-mono text-[9px] text-ink-2"
+          style={{ top: "calc(var(--ly) + var(--lr) + 8px)" }}
+        />
+      )}
 
       {/* event stream, bottom-left */}
       <div className="absolute bottom-5 right-5 hidden w-[330px] rounded-lg border border-crimson/25 bg-void/80 p-3 backdrop-blur md:block">

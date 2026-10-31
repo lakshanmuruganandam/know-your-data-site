@@ -87,6 +87,14 @@ export function HeroCanvas({ onStats }: { onStats?: (s: { blocked: number; leake
       pointer.active = pointer.y > 0 && pointer.y < h;
     };
     const onLeave = () => (pointer.active = false);
+    // phones have no hover: a tap drops the shield where your finger lands for a few seconds
+    let tapTimer = 0;
+    const onTap = (e: PointerEvent) => {
+      if (e.pointerType === "mouse") return;
+      onMove(e);
+      clearTimeout(tapTimer);
+      tapTimer = window.setTimeout(onLeave, 2600);
+    };
 
     const frame = () => {
       t += 1;
@@ -260,6 +268,7 @@ export function HeroCanvas({ onStats }: { onStats?: (s: { blocked: number; leake
     ro.observe(cvs);
     window.addEventListener("pointermove", onMove, { passive: true });
     cvs.addEventListener("pointerleave", onLeave);
+    window.addEventListener("pointerdown", onTap, { passive: true });
     // pause when off-screen
     const io = new IntersectionObserver(([e]) => {
       cancelAnimationFrame(raf);
@@ -272,6 +281,8 @@ export function HeroCanvas({ onStats }: { onStats?: (s: { blocked: number; leake
       io.disconnect();
       window.removeEventListener("pointermove", onMove);
       cvs.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("pointerdown", onTap);
+      clearTimeout(tapTimer);
     };
   }, [onStats]);
 
