@@ -1,22 +1,7 @@
 import type { NextConfig } from "next";
 
-const isDev = process.env.NODE_ENV !== "production";
-
+// The Content-Security-Policy (with a per-request nonce) is set in middleware.ts.
 // Everything is same-origin. No analytics, no CDNs, no third-party anything.
-const csp = [
-  "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self'",
-  `connect-src 'self'${isDev ? " ws:" : ""}`,
-  "frame-src 'none'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self' mailto:",
-  "frame-ancestors 'none'",
-  "upgrade-insecure-requests",
-].join("; ");
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -26,13 +11,23 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
-          { key: "Content-Security-Policy", value: csp },
           { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
           { key: "Referrer-Policy", value: "no-referrer" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=(), browsing-topics=()" },
+          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+          { key: "Origin-Agent-Cluster", value: "?1" },
+          { key: "X-DNS-Prefetch-Control", value: "off" },
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+          {
+            key: "Permissions-Policy",
+            value:
+              "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), hid=(), bluetooth=(), midi=(), " +
+              "accelerometer=(), gyroscope=(), magnetometer=(), ambient-light-sensor=(), display-capture=(), screen-wake-lock=(), " +
+              "xr-spatial-tracking=(), idle-detection=(), publickey-credentials-get=(), interest-cohort=(), browsing-topics=(), " +
+              "attribution-reporting=(), join-ad-interest-group=(), run-ad-auction=()",
+          },
         ],
       },
     ];

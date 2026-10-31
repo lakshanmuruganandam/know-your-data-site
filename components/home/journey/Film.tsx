@@ -241,7 +241,7 @@ export function Film({ packets, price }: { packets: Packet[]; price: number }) {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const p = useSpring(scrollYProgress, { stiffness: 140, damping: 30, mass: 0.35, restDelta: 0.0005 });
   return (
-    <section ref={ref} id="journey" aria-label="The 200 milliseconds after you click" className="relative h-[600vh] bg-void">
+    <section ref={ref} id="journey" aria-label="The 200 milliseconds after you click" className="relative h-[900vh] bg-void">
       <div className="sticky top-0 h-[100svh] overflow-hidden" data-ghost="scroll-scrubbed film · watch-time per chapter logged · engaged-reader segment">
         <Backdrop p={p} />
         <div className="absolute inset-x-0 bottom-[118px] top-[136px] sm:bottom-[124px] sm:top-[120px]">

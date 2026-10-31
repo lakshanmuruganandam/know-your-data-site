@@ -55,8 +55,9 @@ export function Numbers() {
       <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
         {STATS.map((s, i) => (
           <Reveal key={s.label} i={i} className="bg-void">
-            <div className="group h-full p-7 transition-colors hover:bg-carbon" data-ghost={s.ghost}>
-              <div className={cn("font-display text-5xl font-extrabold tracking-tight xl:text-[3.4rem]", toneText[s.tone])}>
+            <div className="group @container h-full p-7 transition-colors hover:bg-carbon" data-ghost={s.ghost}>
+              {/* sized to the cell, so "$9.68B" never spills into its neighbour at any width */}
+              <div className={cn("whitespace-nowrap font-display text-[clamp(1.75rem,18cqi,3.4rem)] font-extrabold leading-none tracking-tight", toneText[s.tone])}>
                 <Counter to={s.to} decimals={s.dec ?? 0} prefix={s.pre} suffix={s.suf} />
               </div>
               <p className="mt-4 text-sm leading-relaxed text-ink-2">{s.label}</p>

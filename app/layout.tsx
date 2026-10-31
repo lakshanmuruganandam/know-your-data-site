@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Geist, Instrument_Serif, JetBrains_Mono, Syne } from "next/font/google";
 import { Providers, Stage } from "@/components/Providers";
 import { Navigation } from "@/components/Navigation";
@@ -22,7 +23,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#07080B", colorScheme: "dark" };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // reading the request makes every page render per-request, so Next stamps its scripts with the CSP nonce
+  await headers();
   return (
     <html lang="en" className={`${syne.variable} ${geist.variable} ${mono.variable} ${serif.variable}`}>
       <body className="grain min-h-dvh">

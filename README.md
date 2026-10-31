@@ -25,7 +25,7 @@ Every page has two layers: the one you read, and the one that reads you.
 
 - **Cold open:** the first visit in each session plays a terminal that reads your fingerprint, then "SUBJECT IDENTIFIED", then the screen tears away in shutters. You can skip it.
 - **Hero:** a raw-WebGL "data ocean" shader. Crimson currents converge on you, the cursor shield glows cyan, and the camera dollies as you scroll.
-- **"The 200 milliseconds after you click":** a 600vh scroll-scrubbed film in six chapters (click → pixel → auction → broker → breach → shield), built from your own browser data.
+- **"The 200 milliseconds after you click":** a 900vh scroll-scrubbed film in six chapters (click → pixel → auction → broker → breach → shield), built from your own browser data.
 - **Route cuts:** redaction-bar wipes with a chapter card. Headlines decrypt out of glyph noise, buttons are magnetic, and cards tilt in 3D under a spotlight.
 - **Per-module motion:** CRT console, 3D folder cabinet, printer-fed legal letters, odometers, armour shards, glitch strikes.
 - **Reduced motion:** everything respects `prefers-reduced-motion`, falling back to still frames or a storyboard.
@@ -45,7 +45,7 @@ Every page has two layers: the one you read, and the one that reads you.
 
 - Everything runs client-side. There are no API routes, no analytics and no cookies.
 - Fonts are self-hosted via `next/font`, downloaded at build time.
-- A strict CSP (`default-src 'self'`, `connect-src 'self'`, `frame-ancestors 'none'`) plus HSTS, `Referrer-Policy: no-referrer` and a locked-down Permissions-Policy are set in `next.config.ts`.
+- A nonce-based CSP with `'strict-dynamic'` is set in `middleware.ts`, so injected scripts, inline handlers and `javascript:` URLs never run. `next.config.ts` adds HSTS, COOP/CORP, `no-referrer` and a locked-down Permissions-Policy. See [SECURITY.md](SECURITY.md).
 - `localStorage` is used only for the visitor's own toolkit progress, redactions and previous canvas hash.
 
 ## Stack
