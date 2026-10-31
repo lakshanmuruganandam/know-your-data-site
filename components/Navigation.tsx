@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { Eye, EyeOff, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -13,6 +13,12 @@ export function Navigation() {
   const path = usePathname();
   const { price, ghost, setGhost, setDockOpen, dockOpen } = useShadow();
   const [open, setOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const { scrollY } = useScroll();
+  useMotionValueEvent(scrollY, "change", (v) => {
+    const prev = scrollY.getPrevious() ?? 0;
+    setHidden(v > 240 && v > prev + 2 ? true : v < prev - 2 ? false : hidden);
+  });
 
   useEffect(() => setOpen(false), [path]);
 
@@ -20,7 +26,7 @@ export function Navigation() {
     <>
       <motion.nav
         initial={{ y: -40, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        animate={{ y: hidden && !dockOpen ? -110 : 0, opacity: 1 }}
         transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 24 }}
         className="fixed inset-x-0 top-4 z-50 flex justify-center px-3"
       >

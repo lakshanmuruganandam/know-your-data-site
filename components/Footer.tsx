@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/Navigation";
 import { NAV } from "@/lib/nav";
+import { FooterMark } from "@/components/FooterMark";
 
 export function Footer() {
   return (
@@ -41,6 +42,7 @@ export function Footer() {
           </p>
         </div>
       </div>
+      <FooterMark />
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-2 px-4 py-6 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3 sm:flex-row sm:px-8">
           <span>© 2026 Know Your Data · educational, not legal advice</span>

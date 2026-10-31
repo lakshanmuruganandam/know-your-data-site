@@ -141,8 +141,8 @@ export function Vault() {
         </p>
 
         {/* ── the drawer of files ── */}
-        <motion.ul layout className="mt-4 grid gap-x-5 gap-y-6 sm:grid-cols-2 xl:grid-cols-3">
-          <AnimatePresence mode="popLayout" initial={false}>
+        <motion.ul layout className="mt-4 grid grid-cols-1 gap-x-5 overflow-x-clip px-1 -mx-1 py-2 gap-y-6 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
+          <AnimatePresence mode="popLayout">
             {list.map((c, i) => (
               <CaseFolder
                 key={c.id}

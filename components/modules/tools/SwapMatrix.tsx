@@ -11,6 +11,11 @@ export function SwapMatrix({ active, onPick }: { active: Category | "All"; onPic
   const reduce = useReducedMotion();
   const [tick, setTick] = useState(0);
   const [hover, setHover] = useState<string | null>(null);
+  const [glitchN, setGlitchN] = useState<Record<string, number>>({});
+  const enter = (k: string) => {
+    setHover(k);
+    setGlitchN((g) => ({ ...g, [k]: (g[k] ?? 0) + 1 }));
+  };
 
   useEffect(() => {
     if (reduce) return;
@@ -35,9 +40,9 @@ export function SwapMatrix({ active, onPick }: { active: Category | "All"; onPic
             viewport={{ once: true, margin: "-5% 0px" }}
             transition={{ delay: (i % 4) * 0.06, duration: 0.6, ease }}
             whileTap={{ scale: 0.98 }}
-            onMouseEnter={() => setHover(s.bigTech)}
+            onMouseEnter={() => enter(s.bigTech)}
             onMouseLeave={() => setHover(null)}
-            onFocus={() => setHover(s.bigTech)}
+            onFocus={() => enter(s.bigTech)}
             onBlur={() => setHover(null)}
             onClick={() => onPick(s.category)}
             aria-pressed={on}
@@ -63,6 +68,8 @@ export function SwapMatrix({ active, onPick }: { active: Category | "All"; onPic
               >
                 {s.bigTech}
               </motion.span>
+              {/* RGB-split glitch: fires as the strike lands, and again on hover/focus */}
+              {!reduce && <Glitch key={glitchN[s.bigTech] ?? 0} text={s.bigTech} delay={glitchN[s.bigTech] ? 0 : 0.62 + (i % 4) * 0.06} />}
               <motion.span
                 aria-hidden
                 className="absolute left-[-4px] right-[-4px] top-1/2 h-[3px] origin-left -translate-y-1/2 rounded-full bg-crimson shadow-[0_0_14px_rgba(255,51,102,0.7)]"
@@ -102,5 +109,36 @@ export function SwapMatrix({ active, onPick }: { active: Category | "All"; onPic
         );
       })}
     </div>
+  );
+}
+
+/* two chromatic ghost copies (cyan / crimson) jitter out of register in horizontal slices, then snap back */
+const SLICES = ["inset(0% 0% 62% 0%)", "inset(55% 0% 8% 0%)", "inset(22% 0% 40% 0%)", "inset(70% 0% 0% 0%)", "inset(0% 0% 0% 0%)"];
+function Glitch({ text, delay }: { text: string; delay: number }) {
+  const base = "pointer-events-none absolute inset-0 select-none whitespace-nowrap font-display text-[22px] font-extrabold leading-none tracking-tight mix-blend-screen";
+  const t = { delay, duration: 0.42, ease: "linear" as const, times: [0, 0.2, 0.45, 0.7, 1] };
+  return (
+    <>
+      <motion.span
+        aria-hidden
+        className={cn(base, "text-cyan")}
+        initial={{ opacity: 0, x: 0 }}
+        whileInView={{ opacity: [0, 0.9, 0.8, 0.9, 0], x: [0, -4, 3, -2, 0], clipPath: SLICES }}
+        viewport={{ once: true }}
+        transition={t}
+      >
+        {text}
+      </motion.span>
+      <motion.span
+        aria-hidden
+        className={cn(base, "text-crimson")}
+        initial={{ opacity: 0, x: 0 }}
+        whileInView={{ opacity: [0, 0.9, 0.8, 0.9, 0], x: [0, 4, -3, 2, 0], clipPath: [...SLICES].reverse() }}
+        viewport={{ once: true }}
+        transition={t}
+      >
+        {text}
+      </motion.span>
+    </>
   );
 }

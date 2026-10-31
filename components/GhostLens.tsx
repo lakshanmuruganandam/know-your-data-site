@@ -96,6 +96,10 @@ export function GhostLens() {
         visible = true;
         el.style.opacity = "1";
       }
+      probe();
+    };
+    // what's under the lens changes on scroll too, not just on pointer moves
+    const probe = () => {
       const under = document.elementFromPoint(x, y);
       if (under && under !== current) {
         current = under;
@@ -130,6 +134,7 @@ export function GhostLens() {
     };
     let lastScrollLog = 0;
     const onScroll = () => {
+      if (visible) probe();
       const now = performance.now();
       if (now - lastScrollLog < 400) return;
       lastScrollLog = now;

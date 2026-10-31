@@ -18,6 +18,23 @@ const RINGS = [
   { r: 170, w: 22 },
 ];
 
+/* each ring is drawn as FRAGS arc shards that fly in from outside and lock together on first view */
+const FRAGS = 8;
+const r2 = (v: number) => Math.round(v * 100) / 100;
+function shard(r: number, k: number) {
+  const gap = 0.012; // radians — hairline seams between shards
+  const a0 = (k / FRAGS) * Math.PI * 2 + gap - Math.PI / 2;
+  const a1 = ((k + 1) / FRAGS) * Math.PI * 2 - gap - Math.PI / 2;
+  const mid = (a0 + a1) / 2;
+  return {
+    d: `M ${r2(200 + r * Math.cos(a0))} ${r2(200 + r * Math.sin(a0))} A ${r} ${r} 0 0 1 ${r2(200 + r * Math.cos(a1))} ${r2(200 + r * Math.sin(a1))}`,
+    dx: r2(Math.cos(mid) * 90),
+    dy: r2(Math.sin(mid) * 90),
+    rot: k % 2 ? 24 : -24,
+  };
+}
+const SHARDS = RINGS.map((g) => Array.from({ length: FRAGS }, (_, k) => shard(g.r, k)));
+
 export function Layers() {
   const [active, setActive] = useState(0);
   const layer = LAYERS[active];
@@ -138,7 +155,20 @@ function Armour({ active, onSelect }: { active: number; onSelect: (i: number) =>
               className="cursor-pointer outline-none [&:focus-visible_.focus-ring]:opacity-100"
               data-ghost={l.ghost}
             >
-              <circle cx="200" cy="200" r={g.r} fill="none" stroke={color} strokeOpacity={on ? 0.22 : 0.07} strokeWidth={g.w} />
+              {SHARDS[i].map((f, k) => (
+                <motion.path
+                  key={k}
+                  d={f.d}
+                  fill="none"
+                  stroke={color}
+                  strokeOpacity={on ? 0.22 : 0.07}
+                  strokeWidth={g.w}
+                  initial={{ x: f.dx, y: f.dy, rotate: f.rot, opacity: 0 }}
+                  whileInView={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
+                  viewport={{ once: true, margin: "-10% 0px" }}
+                  transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 110, damping: 16, delay: 0.15 + (RINGS.length - 1 - i) * 0.16 + k * 0.035 }}
+                />
+              ))}
               <circle className="focus-ring opacity-0" cx="200" cy="200" r={g.r + g.w / 2 + 1} fill="none" stroke="var(--ink)" strokeWidth="1" strokeDasharray="2 4" />
               <motion.circle
                 cx="200"
@@ -149,7 +179,7 @@ function Armour({ active, onSelect }: { active: number; onSelect: (i: number) =>
                 strokeWidth={on ? 2 : 1}
                 strokeOpacity={on ? 1 : 0.35}
                 strokeDasharray={on ? "6 6" : "1 7"}
-                style={{ originX: "200px", originY: "200px", filter: on ? `drop-shadow(0 0 6px ${color})` : undefined }}
+                style={{ filter: on ? `drop-shadow(0 0 6px ${color})` : undefined }}
                 animate={reduce ? undefined : { rotate: i % 2 ? -360 : 360 }}
                 transition={{ duration: on ? 24 : 60, repeat: Infinity, ease: "linear" }}
               />

@@ -1,9 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { animate, motion, useReducedMotion } from "framer-motion";
 import { AlertTriangle, ChevronLeft, ChevronRight, ShieldCheck, X } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { Redacted, Source, spring, ease, toneText } from "@/components/ui";
+import { Redacted, Source, spring, ease, toneBorder, toneText } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { SEVERITY_META, type VaultCase } from "@/lib/data/cases";
 import { CategoryPill, SeverityMeter, Stamp } from "./bits";
@@ -81,6 +81,15 @@ export function Dossier({
     scrollRef.current?.scrollTo({ top: 0 });
   }, [c.id]);
 
+  /* stamp impact: a micro screen-shake on the dossier when DECLASSIFIED slams down */
+  const reduce = useReducedMotion();
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el || reduce || !matchMedia("(min-width: 640px)").matches) return;
+    const ctl = animate(el, { x: [0, -5, 4, -2.5, 1.5, 0] }, { delay: 0.4, duration: 0.32, ease: "easeOut" });
+    return () => ctl.stop();
+  }, [c.id, reduce]);
+
   const sev = SEVERITY_META[c.severity];
 
   return (
@@ -100,13 +109,30 @@ export function Dossier({
           role="dialog"
           aria-modal="true"
           aria-labelledby="dossier-title"
-          initial={{ y: 60, opacity: 0, rotateX: 8, scale: 0.97 }}
+          initial={{ y: 90, opacity: 0, rotateX: 22, scale: 0.94 }}
           animate={{ y: 0, opacity: 1, rotateX: 0, scale: 1 }}
-          exit={{ y: 40, opacity: 0, scale: 0.97 }}
-          transition={spring}
-          style={{ transformPerspective: 1200 }}
+          exit={{ y: 40, opacity: 0, rotateX: 10, scale: 0.96 }}
+          transition={reduce ? { duration: 0 } : spring}
+          style={{ transformPerspective: 1200, originY: 0 }}
           className="relative mx-auto my-4 w-[calc(100%-1.5rem)] max-w-5xl overflow-hidden rounded-2xl border border-line-2 bg-carbon shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)] sm:my-10"
         >
+          {/* folder cover: swings open on its top hinge, revealing the paper underneath */}
+          {!reduce && (
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 z-20 h-[min(100vh,900px)] rounded-2xl border border-line-2 bg-zinc"
+              style={{ transformPerspective: 1400, originY: 0, backfaceVisibility: "hidden" }}
+              initial={{ rotateX: 0, opacity: 1 }}
+              animate={{ rotateX: -112, opacity: [1, 1, 0] }}
+              transition={{ delay: 0.12, duration: 0.75, ease: [0.65, 0, 0.35, 1], opacity: { delay: 0.12, duration: 0.75, times: [0, 0.7, 1] } }}
+            >
+              <span className="absolute left-6 top-6 font-mono text-[11px] uppercase tracking-[0.3em] text-ink-3">File {c.file} · {c.codename}</span>
+              <span className="absolute left-1/2 top-[28%] -translate-x-1/2 -rotate-[8deg]">
+                <Stamp tone={sev.tone} className="px-4 py-1.5 text-[15px]">Classified</Stamp>
+              </span>
+            </motion.div>
+          )}
+
           {/* top glow in severity colour */}
           <div
             aria-hidden
@@ -139,7 +165,14 @@ export function Dossier({
             </div>
           </div>
 
-          <motion.div key={c.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease }} className="relative px-4 pb-10 pt-8 sm:px-10 sm:pt-10">
+          <motion.div
+            key={c.id}
+            /* the paper slides up out of the folder, unmasking top-down */
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 48, clipPath: "inset(0% 0% 100% 0%)" }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, clipPath: "inset(-10% -10% -10% -10%)" }}
+            transition={{ duration: 0.7, ease, delay: 0.18 }}
+            className="relative px-4 pb-10 pt-8 sm:px-10 sm:pt-10"
+          >
             {/* ── header ── */}
             <div className="relative">
               <motion.div
@@ -150,6 +183,16 @@ export function Dossier({
               >
                 <Stamp tone={sev.tone} className="px-3 py-1 text-[13px]">Declassified</Stamp>
               </motion.div>
+              {!reduce && (
+                <motion.span
+                  key={`burst-${c.id}`}
+                  aria-hidden
+                  className={cn("pointer-events-none absolute right-6 top-0 hidden h-16 w-40 rounded-full border-2 sm:block", toneBorder[sev.tone])}
+                  initial={{ scale: 0.4, opacity: 0 }}
+                  animate={{ scale: [0.4, 1.6], opacity: [0, 0.7, 0] }}
+                  transition={{ delay: 0.38, duration: 0.6, ease: "easeOut" }}
+                />
+              )}
               <Label tone={toneText[sev.tone]}>{c.codename}</Label>
               <h2 id="dossier-title" className="mt-3 max-w-3xl font-display text-[clamp(2rem,5.5vw,3.8rem)] font-extrabold leading-[0.95] tracking-[-0.03em] text-ink" data-ghost={c.ghost}>
                 {c.company}

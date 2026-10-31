@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Card, Counter, Reveal, Source, Tag, ease } from "@/components/ui";
+import { motion, useReducedMotion } from "framer-motion";
+import { Card, Counter, Reveal, Source, Tag } from "@/components/ui";
 import { META_AD_REVENUE_2025, META_REVENUE_2025, pct } from "./data";
 
 /* ───────── the value side ───────── */
@@ -107,6 +107,7 @@ const CNIL = [
 
 export function RepeatOffender() {
   const max = 325;
+  const reduce = useReducedMotion();
   return (
     <div data-ghost="same violation, three fines, still compliant enough to keep operating">
       <Tag tone="amber">Google × CNIL · cookie consent</Tag>
@@ -119,7 +120,7 @@ export function RepeatOffender() {
               initial={{ height: 0 }}
               whileInView={{ height: `${(c.eur / max) * 100}%` }}
               viewport={{ once: true }}
-              transition={{ duration: 0.9, delay: i * 0.18, ease }}
+              transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 80, damping: 9, delay: i * 0.18 }}
             />
             <span className="font-mono text-[11px] text-ink-3">{c.year}</span>
           </div>

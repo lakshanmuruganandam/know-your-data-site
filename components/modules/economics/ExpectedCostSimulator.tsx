@@ -1,11 +1,12 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Scale, Skull } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Card, Source, Tag, spring, toneText, type Tone } from "@/components/ui";
 import { BreakEvenChart } from "./BreakEvenChart";
+import { Odometer } from "./Odometer";
 import { Slider } from "./Slider";
 import { DEFAULT_STATE, PRESETS, discount, expectedPenalty, money, pctFmt, pvGain, type SimState } from "./data";
 
@@ -248,39 +249,76 @@ function Formula({ s, active, fine, d, E }: { s: SimState; active: Key | null; f
       role="img"
     >
       <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-3 font-serif text-[22px] leading-none text-ink sm:text-[28px]">
-        <span className="whitespace-nowrap italic text-ink-2">
-          E<span className="font-sans text-[0.6em] not-italic">[penalty]</span>
-        </span>
-        <Op>=</Op>
-        <Term tone="cyan" on={active === "pDetect"} sub={`${Math.round(s.pDetect * 100)}%`}>
-          P<span className="text-[0.55em] align-sub not-italic">d</span>
-        </Term>
-        <Op>×</Op>
-        <Term tone="cyan" on={active === "pEnforce"} sub={`${Math.round(s.pEnforce * 100)}%`}>
-          P<span className="text-[0.55em] align-sub not-italic">e</span>
-        </Term>
-        <Op>×</Op>
-        <Term tone="amber" on={active === "logFine"} sub={money(fine)}>
-          F
-        </Term>
-        <Op>×</Op>
-        <Term tone="lime" on={active === "r" || active === "t"} sub={`×${d.toFixed(2)}`}>
-          <span className="inline-flex flex-col items-center px-0.5 align-middle">
-            <span className="px-2 pb-1 not-italic">1</span>
-            <span className="h-px w-full bg-current opacity-60" />
-            <span className="whitespace-nowrap px-1 pt-1">
-              (1 + <Hi on={active === "r"}>r</Hi>)<sup className="ml-0.5 text-[0.6em]"><Hi on={active === "t"}>t</Hi></sup>
-            </span>
+        <Glyph i={0}>
+          <span className="whitespace-nowrap italic text-ink-2">
+            E<span className="font-sans text-[0.6em] not-italic">[penalty]</span>
           </span>
-        </Term>
+        </Glyph>
+        <Glyph i={1}><Op>=</Op></Glyph>
+        <Glyph i={2}>
+          <Term tone="cyan" on={active === "pDetect"} sub={`${Math.round(s.pDetect * 100)}%`}>
+            P<span className="text-[0.55em] align-sub not-italic">d</span>
+          </Term>
+        </Glyph>
+        <Glyph i={3}><Op>×</Op></Glyph>
+        <Glyph i={4}>
+          <Term tone="cyan" on={active === "pEnforce"} sub={`${Math.round(s.pEnforce * 100)}%`}>
+            P<span className="text-[0.55em] align-sub not-italic">e</span>
+          </Term>
+        </Glyph>
+        <Glyph i={5}><Op>×</Op></Glyph>
+        <Glyph i={6}>
+          <Term tone="amber" on={active === "logFine"} sub={money(fine)}>
+            F
+          </Term>
+        </Glyph>
+        <Glyph i={7}><Op>×</Op></Glyph>
+        <Glyph i={8}>
+          <Term tone="lime" on={active === "r" || active === "t"} sub={`×${d.toFixed(2)}`}>
+            <span className="inline-flex flex-col items-center px-0.5 align-middle">
+              <span className="px-2 pb-1 not-italic">1</span>
+              <span className="h-px w-full bg-current opacity-60" />
+              <span className="whitespace-nowrap px-1 pt-1">
+                (1 + <Hi on={active === "r"}>r</Hi>)<sup className="ml-0.5 text-[0.6em]"><Hi on={active === "t"}>t</Hi></sup>
+              </span>
+            </span>
+          </Term>
+        </Glyph>
       </div>
       <div className="mt-5 flex items-center justify-center gap-3 border-t border-line pt-4">
         <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-3">=</span>
-        <motion.span key={money(E)} initial={{ scale: 1.08, opacity: 0.5 }} animate={{ scale: 1, opacity: 1 }} transition={spring} className="font-mono text-2xl text-amber tabular-nums sm:text-3xl">
-          {money(E)}
-        </motion.span>
+        <Odometer value={money(E)} className="font-mono text-2xl text-amber tabular-nums sm:text-3xl" />
       </div>
     </div>
+  );
+}
+
+/* formula assembles from scattered glyphs when it scrolls into view (fixed offsets → SSR-stable) */
+const SCATTER = [
+  { x: -90, y: -40, r: -28 },
+  { x: -30, y: 60, r: 40 },
+  { x: 40, y: -70, r: 18 },
+  { x: -60, y: 50, r: -50 },
+  { x: 80, y: 40, r: 26 },
+  { x: 20, y: -60, r: -36 },
+  { x: -50, y: -50, r: 32 },
+  { x: 70, y: 70, r: -22 },
+  { x: 110, y: -30, r: 14 },
+];
+
+function Glyph({ i, children }: { i: number; children: ReactNode }) {
+  const reduce = useReducedMotion();
+  const o = SCATTER[i % SCATTER.length];
+  return (
+    <motion.span
+      className="inline-flex"
+      initial={{ x: o.x, y: o.y, rotate: o.r, opacity: 0, filter: "blur(8px)" }}
+      whileInView={{ x: 0, y: 0, rotate: 0, opacity: 1, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-10% 0px" }}
+      transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 15, delay: 0.1 + i * 0.07 }}
+    >
+      {children}
+    </motion.span>
   );
 }
 
@@ -313,28 +351,27 @@ function Stat({ label, value, tone, ghost }: { label: string; value: string; ton
   return (
     <div data-ghost={ghost} className="glass min-w-0 rounded-xl p-3.5 sm:p-4">
       <p className="font-mono text-[9.5px] uppercase leading-snug tracking-[0.16em] text-ink-3 sm:text-[10px]">{label}</p>
-      <motion.p
-        key={value}
-        initial={{ opacity: 0.4, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={cn("mt-2 truncate font-mono text-xl tabular-nums sm:text-2xl", toneText[tone])}
-      >
-        {value}
-      </motion.p>
+      <p className={cn("mt-2 truncate font-mono text-xl tabular-nums sm:text-2xl", toneText[tone])}>
+        <Odometer value={value} />
+      </p>
     </div>
   );
 }
 
 function Verdict({ violate }: { violate: boolean }) {
+  const reduce = useReducedMotion();
+  const siren = violate ? "rgba(255,51,102,.55)" : "rgba(0,255,136,.45)";
   return (
-    <div aria-live="polite" className="relative">
+    <div aria-live="polite" className="relative [perspective:900px]">
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={violate ? "v" : "c"}
-          initial={{ opacity: 0, scale: 0.97, filter: "blur(6px)" }}
-          animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-          exit={{ opacity: 0, scale: 1.02, filter: "blur(6px)" }}
-          transition={{ duration: 0.35 }}
+          /* split-flap flip on the X axis when the verdict changes */
+          initial={reduce ? { opacity: 0 } : { opacity: 0, rotateX: -88, filter: "blur(4px)" }}
+          animate={reduce ? { opacity: 1 } : { opacity: 1, rotateX: 0, filter: "blur(0px)" }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, rotateX: 88, filter: "blur(4px)" }}
+          transition={reduce ? { duration: 0.15 } : { type: "spring", stiffness: 260, damping: 22 }}
+          style={{ originY: 0.5 }}
           data-ghost={violate ? "verdict: violate · board approves · fine reserved as opex" : "verdict: comply · rare outcome · log for analysts"}
           className={cn(
             "scanlines relative overflow-hidden rounded-2xl border px-5 py-5 sm:px-6",
@@ -346,6 +383,17 @@ function Verdict({ violate }: { violate: boolean }) {
             className="pointer-events-none absolute -inset-10 opacity-60 blur-2xl"
             style={{ background: `radial-gradient(circle at 20% 50%, ${violate ? "rgba(255,51,102,.35)" : "rgba(0,255,136,.3)"}, transparent 60%)` }}
           />
+          {/* siren sweep: a beam of light crosses the banner twice as the new verdict lands */}
+          {!reduce && (
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 left-0 w-1/2 mix-blend-screen"
+              style={{ background: `linear-gradient(100deg, transparent 10%, ${siren} 50%, transparent 90%)` }}
+              initial={{ x: "-120%" }}
+              animate={{ x: "260%" }}
+              transition={{ duration: 0.75, repeat: 1, ease: "easeInOut", delay: 0.12 }}
+            />
+          )}
           <div className="relative flex items-center gap-4">
             {violate ? <Skull className="shrink-0 text-crimson" size={30} /> : <Scale className="shrink-0 text-lime" size={30} />}
             <div className="min-w-0">

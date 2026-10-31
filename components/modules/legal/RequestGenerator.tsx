@@ -1,8 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useAnimate, useReducedMotion } from "framer-motion";
 import { CalendarClock, Lock, Mail, ShieldAlert } from "lucide-react";
-import { Fragment, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { CopyButton, DownloadButton, Tag, spring } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import {
@@ -104,6 +104,24 @@ export function RequestGenerator() {
     for (const c of `${company}|${template}|${juris}`) h = (h * 31 + c.charCodeAt(0)) >>> 0;
     return h.toString(36).toUpperCase().padStart(6, "0").slice(-6);
   }, [company, template, juris]);
+  const reduce = useReducedMotion();
+
+  /* "FILED" wax-seal stamp: slams onto the letter whenever it is copied, downloaded or handed to email */
+  const [stamp, setStamp] = useState<{ id: number; word: string } | null>(null);
+  const stampTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [paperRef, animatePaper] = useAnimate<HTMLDivElement>();
+  useEffect(() => () => {
+    if (stampTimer.current) clearTimeout(stampTimer.current);
+  }, []);
+  const fire = (word: string) => {
+    if (stampTimer.current) clearTimeout(stampTimer.current);
+    setStamp({ id: Date.now(), word });
+    stampTimer.current = setTimeout(() => setStamp(null), 2200);
+    if (!reduce && paperRef.current) void animatePaper(paperRef.current, { y: [0, 3, -1, 0], rotate: [0, -0.25, 0.1, 0] }, { delay: 0.22, duration: 0.3 });
+  };
+  const lineCount = body.split("\n").length + Math.ceil(body.length / 70);
+  const printDur = Math.min(2.4, 0.5 + lineCount * 0.035);
+
   const emailOk = !privacyEmail.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(privacyEmail.trim());
 
   return (
@@ -230,7 +248,18 @@ export function RequestGenerator() {
 
       {/* ── letter preview ── */}
       <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+        {/* printer slot the letter feeds out of */}
+        <div aria-hidden className="relative -mb-3 h-2.5 rounded-full border border-line-2 bg-void shadow-[inset_0_2px_6px_rgba(0,0,0,0.9)]">
+          <span className="absolute inset-x-6 top-1/2 h-px -translate-y-1/2 bg-lime/30" />
+        </div>
+        <motion.div
+          initial={{ y: -48, clipPath: "inset(0% 0% 100% 0%)" }}
+          whileInView={{ y: 0, clipPath: "inset(-20% -20% -20% -20%)" }}
+          viewport={{ once: true, margin: "-10% 0px" }}
+          transition={reduce ? { duration: 0 } : { duration: 1.1, ease: [0.65, 0, 0.35, 1] }}
+        >
         <div
+          ref={paperRef}
           className="relative overflow-hidden rounded-2xl border border-line-2 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.02)_inset]"
           style={{
             background:
@@ -255,23 +284,77 @@ export function RequestGenerator() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={template + juris}
-                initial={{ opacity: 0, filter: "blur(4px)" }}
-                animate={{ opacity: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, filter: "blur(4px)" }}
-                transition={{ duration: 0.25 }}
-                className="whitespace-pre-wrap break-words font-serif text-[16.5px] leading-[28px] text-ink/90"
+                className="relative"
+                exit={{ opacity: 0, y: -14, filter: "blur(3px)" }}
+                transition={{ duration: 0.2 }}
               >
-                <Highlighted text={body} />
-                <span aria-hidden className="blink ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[3px] bg-cyan" />
+                {/* printer feed: the text is revealed line by line (stepped clip at the 28px line pitch) */}
+                <motion.div
+                  initial={reduce ? { opacity: 0 } : { clipPath: "inset(0% 0% 100% 0%)", y: 10 }}
+                  animate={reduce ? { opacity: 1 } : { clipPath: "inset(0% 0% 0% 0%)", y: 0 }}
+                  transition={reduce ? { duration: 0.2 } : { clipPath: { duration: printDur, ease: steps(lineCount) }, y: { duration: printDur, ease: "linear" } }}
+                  className="whitespace-pre-wrap break-words font-serif text-[16.5px] leading-[28px] text-ink/90"
+                >
+                  <Highlighted text={body} />
+                  <span aria-hidden className="blink ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[3px] bg-cyan" />
+                </motion.div>
+                {/* print head riding the feed edge */}
+                {!reduce && (
+                  <motion.span
+                    aria-hidden
+                    className="pointer-events-none absolute -inset-x-3 h-[3px] rounded-full bg-lime/70 shadow-[0_0_14px_2px_rgba(0,255,136,0.45)]"
+                    initial={{ top: "0%", opacity: 1 }}
+                    animate={{ top: "100%", opacity: [1, 1, 0] }}
+                    transition={{ top: { duration: printDur, ease: steps(lineCount) }, opacity: { duration: printDur + 0.25, times: [0, 0.9, 1] } }}
+                  />
+                )}
               </motion.div>
             </AnimatePresence>
           </div>
+
+          {/* FILED wax seal */}
+          <AnimatePresence>
+            {stamp && (
+              <motion.div
+                key={stamp.id}
+                aria-hidden
+                className="pointer-events-none absolute right-5 top-16 z-20 sm:right-10 sm:top-20"
+                initial={reduce ? { opacity: 0 } : { scale: 2.8, opacity: 0, rotate: -32 }}
+                animate={reduce ? { opacity: 1 } : { scale: 1, opacity: 1, rotate: -12 }}
+                exit={{ opacity: 0, scale: 0.96, filter: "blur(3px)" }}
+                transition={reduce ? { duration: 0.15 } : { type: "spring", stiffness: 520, damping: 22 }}
+              >
+                <div className="relative grid h-28 w-28 place-items-center rounded-full border-[3px] border-crimson/80 bg-crimson/[0.12] text-crimson mix-blend-screen shadow-[0_0_40px_-6px_rgba(255,51,102,0.7)] sm:h-32 sm:w-32">
+                  <span className="absolute inset-2 rounded-full border border-dashed border-crimson/60" />
+                  <span className="text-center">
+                    <span className="block font-mono text-[9px] uppercase tracking-[0.3em] text-crimson/80">KYD · {template}</span>
+                    <span className="block font-display text-[22px] font-extrabold uppercase leading-none tracking-[0.08em] sm:text-[26px]">{stamp.word}</span>
+                    <span className="block font-mono text-[9px] uppercase tracking-[0.3em] text-crimson/80">{date ?? "today"}</span>
+                  </span>
+                </div>
+                {!reduce && (
+                  <motion.span
+                    className="absolute inset-0 rounded-full border-2 border-crimson"
+                    initial={{ scale: 1, opacity: 0.8 }}
+                    animate={{ scale: 1.9, opacity: 0 }}
+                    transition={{ delay: 0.12, duration: 0.6, ease: "easeOut" }}
+                  />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+        </motion.div>
 
         <div className="flex flex-wrap gap-3">
-          <CopyButton text={full} label="Copy letter" />
-          <DownloadButton text={full} filename={`data-request-${template}-${slug || "company"}.txt`} />
+          <span className="contents" onClickCapture={() => fire("Filed")}>
+            <CopyButton text={full} label="Copy letter" />
+          </span>
+          <span className="contents" onClickCapture={() => fire("Filed")}>
+            <DownloadButton text={full} filename={`data-request-${template}-${slug || "company"}.txt`} />
+          </span>
           <motion.a
+            onClick={() => fire("Sent")}
             whileTap={{ scale: 0.97 }}
             href={mailto}
             data-ghost="mailto handoff → your mail client, not our servers"
@@ -293,6 +376,11 @@ export function RequestGenerator() {
       </div>
     </div>
   );
+}
+
+function steps(n: number) {
+  const k = Math.max(4, Math.min(80, n));
+  return (t: number) => Math.min(1, Math.ceil(t * k) / k);
 }
 
 function Check({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {

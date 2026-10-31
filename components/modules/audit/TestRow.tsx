@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, Eye, EyeOff, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { spring, StatusGlyph, toneText, type Status } from "@/components/ui";
@@ -33,6 +33,8 @@ export function TestRow({
   extra?: React.ReactNode;
 }) {
   const panelId = `audit-panel-${meta.id}`;
+  const reduce = useReducedMotion();
+  const lockTone = result ? stripe[result.status] : "bg-cyan";
   return (
     <motion.li
       layout="position"
@@ -43,13 +45,29 @@ export function TestRow({
       )}
     >
       <span aria-hidden className={cn("absolute inset-y-0 left-0 w-[3px] transition-colors duration-500", stripe[status])} />
-      {status === "scan" && (
+      {status === "scan" && !reduce && (
+        // scanning beam: soft wash + a hard laser edge with bloom, sweeping the row
         <motion.span
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-cyan/10 to-transparent"
-          initial={{ left: "-33%" }}
-          animate={{ left: "100%" }}
-          transition={{ repeat: Infinity, duration: 1.4, ease: "linear" }}
+          className="pointer-events-none absolute inset-y-0 left-0 w-1/3"
+          initial={{ x: "-100%" }}
+          animate={{ x: "300%" }}
+          transition={{ repeat: Infinity, duration: 1.4, ease: [0.45, 0, 0.55, 1] }}
+        >
+          <span className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan/10 to-cyan/20" />
+          <span className="absolute inset-y-0 right-0 w-px bg-cyan shadow-[0_0_12px_2px_var(--cyan)]" />
+        </motion.span>
+      )}
+      {status === "scan" && reduce && <span aria-hidden className="pointer-events-none absolute inset-0 bg-cyan/5" />}
+      {result && !reduce && (
+        // lock-in flash: the verdict lands as a tone-coloured sweep that burns off
+        <motion.span
+          key={result.status}
+          aria-hidden
+          className={cn("pointer-events-none absolute inset-y-0 left-0 w-full origin-left mix-blend-screen", lockTone)}
+          initial={{ scaleX: 0, opacity: 0.22 }}
+          animate={{ scaleX: 1, opacity: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         />
       )}
       <button

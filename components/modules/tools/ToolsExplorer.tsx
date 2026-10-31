@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { RotateCcw, Search, Sparkles, X } from "lucide-react";
 import { useDeferredValue, useMemo, useRef, useState } from "react";
 import { Button, CopyButton, DownloadButton, Source, Tag, ease, spring } from "@/components/ui";
@@ -26,6 +26,7 @@ export function ToolsExplorer() {
   const [on, setOn] = useState<Record<Toggle, boolean>>({ open: false, self: false, zk: false, free: false });
   const [stack, setStack] = useState<Stack>({});
   const dirRef = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
 
   const counts = useMemo(() => {
     const c: Partial<Record<Category, number>> = {};
@@ -162,15 +163,18 @@ export function ToolsExplorer() {
         </div>
 
         <motion.div layout className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
-          <AnimatePresence mode="popLayout" initial={false}>
-            {list.map((t) => (
+          <AnimatePresence mode="popLayout">
+            {list.map((t, i) => (
               <motion.article
                 key={t.id}
                 layout
-                initial={{ opacity: 0, scale: 0.96, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.18 } }}
-                transition={{ ...spring, opacity: { duration: 0.25 } }}
+                /* cards flip in on their vertical axis like dealt index cards, staggered across the row */
+                initial={{ opacity: 0, rotateY: -72, x: -16, scale: 0.96 }}
+                whileInView={{ opacity: 1, rotateY: 0, x: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-4% 0px" }}
+                exit={reduce ? { opacity: 0, transition: { duration: 0.1 } } : { opacity: 0, rotateY: 70, scale: 0.94, transition: { duration: 0.2 } }}
+                transition={reduce ? { duration: 0 } : { ...spring, delay: (i % 3) * 0.08, opacity: { duration: 0.3, delay: (i % 3) * 0.08 } }}
+                style={{ transformPerspective: 1100, originX: 0 }}
                 data-ghost={t.ghost}
                 className={cn("glass glass-hover rounded-2xl", stack[t.category] === t.id && "border-lime/40")}
               >

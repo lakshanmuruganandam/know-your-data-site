@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowDownRight, ScanLine } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { HeroCanvas } from "@/components/home/HeroCanvas";
+import { ShaderField } from "@/components/home/ShaderField";
 import { Button, Tag, ease } from "@/components/ui";
 import { useShadow } from "@/lib/shadow";
 
@@ -76,8 +77,10 @@ export function Hero() {
 
   return (
     <section className="relative min-h-[100svh] overflow-hidden">
+      <ShaderField />
       <HeroCanvas onStats={onStats} />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_40%,rgba(7,8,11,.95)_10%,rgba(7,8,11,.55)_45%,transparent_75%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_80%_at_18%_45%,rgba(7,8,11,.92)_0%,rgba(7,8,11,.6)_40%,rgba(7,8,11,.12)_70%,transparent_85%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-void/80 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-void to-transparent" />
 
       <div className="relative mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-center px-4 pb-24 pt-32 sm:px-8">

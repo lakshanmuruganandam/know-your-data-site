@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, useSpring, useTransform } from "framer-motion";
-import { useEffect } from "react";
+import { motion, useAnimate, useReducedMotion, useSpring, useTransform } from "framer-motion";
+import { useEffect, useRef } from "react";
 import { toneText, type Tone } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
@@ -32,9 +32,23 @@ export function Gauge({ score, running, done, total }: { score: number; running:
   const mv = useSpring(0, { stiffness: 60, damping: 18 });
   const text = useTransform(mv, (v) => String(Math.round(v)).padStart(2, "0"));
   const len = useTransform(mv, (v) => Math.max(0.001, v / 100));
+  // needle rides a looser spring so it overshoots and settles like a real meter
+  const needle = useSpring(0, reduce ? { stiffness: 400, damping: 60 } : { stiffness: 140, damping: 9, mass: 0.9 });
+  const needleDeg = useTransform(needle, (v) => START + (SWEEP * Math.max(0, Math.min(104, v))) / 100);
   useEffect(() => {
     mv.set(score);
-  }, [score, mv]);
+    needle.set(score);
+  }, [score, mv, needle]);
+
+  // glow bloom: fires once when a scan finishes
+  const [bloomRef, animateBloom] = useAnimate<HTMLDivElement>();
+  const wasRunning = useRef(running);
+  useEffect(() => {
+    if (wasRunning.current && !running && !reduce && bloomRef.current) {
+      void animateBloom(bloomRef.current, { opacity: [0, 0.85, 0], scale: [0.55, 1.08, 1.35] }, { duration: 1.4, ease: [0.22, 1, 0.36, 1] });
+    }
+    wasRunning.current = running;
+  }, [running, reduce, animateBloom, bloomRef]);
   const { label, tone } = grade(score);
   const color = `var(--${tone})`;
   const lit = Math.round((score / 100) * TICKS);
@@ -43,6 +57,7 @@ export function Gauge({ score, running, done, total }: { score: number; running:
     <div className="relative mx-auto aspect-square w-full max-w-[300px]" data-ghost="ran a privacy audit → segment: privacy-curious · bid −$0.08 · churn risk ↑">
       {/* soft radial glow keyed to grade */}
       <div className="pointer-events-none absolute inset-[12%] rounded-full opacity-40 blur-3xl transition-colors duration-700" style={{ background: color }} />
+      <div ref={bloomRef} aria-hidden className="pointer-events-none absolute inset-[6%] rounded-full opacity-0 blur-2xl" style={{ background: `radial-gradient(circle, ${color} 0%, transparent 68%)` }} />
       <svg viewBox="0 0 240 240" className="relative h-full w-full" role="img" aria-label={`Exposure score ${score} out of 100 — ${label}`}>
         {/* tick ring */}
         {Array.from({ length: TICKS + 1 }, (_, i) => {
@@ -67,17 +82,24 @@ export function Gauge({ score, running, done, total }: { score: number; running:
         <path d={ARC} fill="none" stroke="var(--void)" strokeWidth="10" strokeDasharray="1 5" strokeOpacity="0.5" />
         {/* radar sweep while scanning */}
         {running && !reduce && (
-          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2.4, ease: "linear" }} style={{ originX: "120px", originY: "120px" }}>
+          <motion.g animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2.4, ease: "linear" }}>
             <defs>
               <linearGradient id="kyd-sweep" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0" stopColor="var(--cyan)" stopOpacity="0" />
                 <stop offset="1" stopColor="var(--cyan)" stopOpacity="0.55" />
               </linearGradient>
             </defs>
+            <circle cx="120" cy="120" r="80" fill="none" stroke="none" />
             <path d={`M120 120 L ${pt(-28, 80).join(" ")} A 80 80 0 0 1 ${pt(0, 80).join(" ")} Z`} fill="url(#kyd-sweep)" />
             <line x1="120" y1="120" x2={pt(0, 80)[0]} y2={pt(0, 80)[1]} stroke="var(--cyan)" strokeWidth="1" />
           </motion.g>
         )}
+        {/* meter needle — spring overshoot; bbox-centred circle keeps the rotation origin on the hub */}
+        <motion.g style={{ rotate: needleDeg }} aria-hidden>
+          <circle cx="120" cy="120" r="88" fill="none" stroke="none" />
+          <line x1="176" y1="120" x2="206" y2="120" stroke={color} strokeWidth="2" strokeLinecap="round" style={{ transition: "stroke 0.6s", filter: `drop-shadow(0 0 4px ${color})` }} />
+          <circle cx="206" cy="120" r="2.6" fill={color} style={{ transition: "fill 0.6s" }} />
+        </motion.g>
         <circle cx="120" cy="120" r="70" fill="none" stroke="var(--line)" />
         <circle cx="120" cy="120" r="54" fill="none" stroke="var(--line)" strokeDasharray="2 4" />
       </svg>

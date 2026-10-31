@@ -193,3 +193,12 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* cinematic lens vignette */
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 59;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+}

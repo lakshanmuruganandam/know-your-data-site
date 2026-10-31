@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Instrument_Serif, JetBrains_Mono, Syne } from "next/font/google";
-import { Providers } from "@/components/Providers";
+import { Providers, Stage } from "@/components/Providers";
 import { Navigation } from "@/components/Navigation";
 import { GhostLens } from "@/components/GhostLens";
 import { ShadowDock } from "@/components/ShadowDock";
@@ -26,9 +26,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${syne.variable} ${geist.variable} ${mono.variable} ${serif.variable}`}>
       <body className="grain min-h-dvh">
+        <noscript>
+          <style>{"#kyd-intro{display:none}"}</style>
+        </noscript>
+        <div aria-hidden className="vignette" />
         <Providers>
           <Navigation />
-          <main className="relative">{children}</main>
+          <Stage>{children}</Stage>
           <Footer />
           <ShadowDock />
           <GhostLens />

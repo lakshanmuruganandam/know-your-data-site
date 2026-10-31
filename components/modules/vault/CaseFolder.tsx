@@ -1,8 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import { forwardRef } from "react";
+import { forwardRef, useCallback, useRef } from "react";
 import { spring, toneBg, toneText } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { SEVERITY_META, type VaultCase } from "@/lib/data/cases";
@@ -11,16 +11,35 @@ import { CategoryPill, SeverityMeter, Stamp } from "./bits";
 /* ── A classified case file in the vault grid ── */
 export const CaseFolder = forwardRef<HTMLLIElement, { c: VaultCase; onOpen: () => void; index: number; buttonRef?: (el: HTMLButtonElement | null) => void }>(function CaseFolder({ c, onOpen, index, buttonRef }, ref) {
   const sev = SEVERITY_META[c.severity];
+  const reduce = useReducedMotion();
+  const local = useRef<HTMLLIElement | null>(null);
+  const setRef = useCallback(
+    (el: HTMLLIElement | null) => {
+      local.current = el;
+      if (typeof ref === "function") ref(el);
+      else if (ref) ref.current = el;
+    },
+    [ref],
+  );
+  /* scroll-parallax depth: each column drifts at its own rate, like files at different depths in the drawer */
+  const { scrollYProgress } = useScroll({ target: local, offset: ["start end", "end start"] });
+  const depth = [0.55, 1, 0.75][index % 3];
+  const drift = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [34 * depth, -34 * depth]);
+  const y = useSpring(drift, { stiffness: 120, damping: 28, mass: 0.4 });
   return (
     <motion.li
-      ref={ref}
+      ref={setRef}
       layout
-      initial={{ opacity: 0, y: 24, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      /* files slide up out of the cabinet: hinged at the bottom edge, tilted back in 3D, staggered per column */
+      initial={{ opacity: 0, y: 70, rotateX: -62, scale: 0.94 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-6% 0px" }}
       exit={{ opacity: 0, scale: 0.92, filter: "blur(6px)" }}
-      transition={{ ...spring, delay: Math.min(index * 0.04, 0.3) }}
-      className="relative pt-4"
+      transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 140, damping: 20, mass: 0.9, delay: (index % 3) * 0.09 }}
+      style={{ transformPerspective: 900, originY: 1 }}
+      className="relative"
     >
+      <motion.div style={{ y }} className="relative h-full pt-4">
       {/* folder tab */}
       <span aria-hidden className="absolute left-5 top-0 flex h-5 items-center gap-2 rounded-t-md border border-b-0 border-line bg-zinc px-3 font-mono text-[10px] tracking-[0.2em] text-ink-3">
         <span className={cn("h-1.5 w-1.5 rounded-full", toneBg[sev.tone])} />
@@ -75,6 +94,7 @@ export const CaseFolder = forwardRef<HTMLLIElement, { c: VaultCase; onOpen: () =
           ))}
         </span>
       </motion.button>
+      </motion.div>
     </motion.li>
   );
 });

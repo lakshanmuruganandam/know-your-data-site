@@ -1,10 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { ArrowUpRight, Cookie, Globe, HardDrive, Radio } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Card, Counter, Redacted, Reveal, Section, Source, Tag, toneText, type Tone } from "@/components/ui";
+import { useEffect, useRef, useState } from "react";
+import { Card, Counter, Redacted, Reveal, Section, Source, Tag, Tilt, toneText, type Tone } from "@/components/ui";
 import { cn } from "@/lib/cn";
 
 /* ── breach ticker ── */
@@ -94,43 +94,58 @@ export function TwoLayers() {
         </div>
 
         <Reveal i={1}>
-          <div className="relative aspect-[5/4] overflow-hidden rounded-2xl border border-line" data-ghost="hovered the demo → you get it. good.">
-            <div className="absolute inset-0 grid grid-cols-2">
-              <div className="relative bg-carbon p-6">
-                <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-cyan">surface</div>
-                <div className="mt-6 h-3 w-3/4 rounded bg-white/15" />
-                <div className="mt-3 h-3 w-2/3 rounded bg-white/10" />
-                <div className="mt-3 h-3 w-1/2 rounded bg-white/10" />
-                <div className="mt-8 h-24 rounded-lg bg-white/[0.05]" />
-                <div className="mt-6 inline-block rounded-full bg-cyan px-4 py-1.5 font-mono text-[10px] text-void">BUY NOW</div>
-              </div>
-              <div className="scanlines relative bg-[#13070b] p-6">
-                <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-crimson">ghost layer</div>
-                <pre className="mt-6 whitespace-pre-wrap font-mono text-[10.5px] leading-[1.6] text-crimson/90">
-{`mousemove  412,288  v=38px/s
-dwell      h1 "Sale"   4.2s
-hesitate   button.buy  1.1s
-scroll     62% → 41%  (re-read)
-segment    "price-sensitive"
-segment    "impulse · late-night"
-bid        $2.14 → winner: dsp_7`}
-                </pre>
-                <motion.div
-                  className="absolute bottom-6 left-6 right-6 h-px bg-crimson"
-                  animate={{ scaleX: [0, 1, 0], originX: [0, 0, 1] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                />
-              </div>
-            </div>
-            <motion.div
-              className="absolute inset-y-0 w-px bg-gradient-to-b from-transparent via-ink to-transparent"
-              animate={{ left: ["50%", "48%", "52%", "50%"] }}
-              transition={{ duration: 6, repeat: Infinity }}
-            />
-          </div>
+          <LayerWipe />
         </Reveal>
       </div>
     </Section>
+  );
+}
+
+function LayerWipe() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 85%", "end 35%"] });
+  const p = useSpring(scrollYProgress, { stiffness: 100, damping: 26 });
+  const edge = useTransform(p, [0, 1], [96, 8]);
+  const clip = useTransform(edge, (e) => `inset(0 0 0 ${e}%)`);
+  const left = useTransform(edge, (e) => `${e}%`);
+  return (
+    <div ref={ref} className="relative aspect-[5/4] overflow-hidden rounded-2xl border border-line" data-ghost="scrubbed the ghost layer → you get it. good.">
+      {/* surface */}
+      <div className="absolute inset-0 bg-carbon p-6 sm:p-8">
+        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-cyan">surface · what you see</div>
+        <div className="mt-6 font-display text-2xl font-extrabold sm:text-3xl">Summer Sale</div>
+        <div className="mt-3 h-3 w-2/3 rounded bg-white/10" />
+        <div className="mt-2 h-3 w-1/2 rounded bg-white/10" />
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => <div key={i} className="aspect-square rounded-lg bg-white/[0.05]" />)}
+        </div>
+        <div className="mt-6 inline-block rounded-full bg-cyan px-4 py-1.5 font-mono text-[10px] text-void">BUY NOW</div>
+      </div>
+      {/* ghost layer */}
+      <motion.div className="scanlines absolute inset-0 bg-[#140609] p-6 sm:p-8" style={{ clipPath: clip }}>
+        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-crimson">ghost layer · what they log</div>
+        <pre className="mt-6 whitespace-pre-wrap font-mono text-[10.5px] leading-[1.7] text-crimson/90 sm:text-[11.5px]">
+{`mousemove  412,288   v=38px/s
+dwell      h1 "Summer Sale"  4.2s
+hover      img[2]  1.9s → interest: sneakers
+hesitate   button.buy  1.1s
+scroll     62% → 41%  (re-read price)
+segment    "price-sensitive"
+segment    "impulse · late-night"
+bid        $2.14 → winner: dsp_7
+sold to    6 partners · retained 13 mo`}
+        </pre>
+        <div className="absolute bottom-6 left-6 right-6 grid grid-cols-12 gap-1 opacity-70">
+          {Array.from({ length: 36 }).map((_, i) => (
+            <motion.div key={i} className="h-2 bg-crimson/60" animate={{ opacity: [0.15, 1, 0.15] }} transition={{ duration: 1.6, repeat: Infinity, delay: (i % 12) * 0.08 + Math.floor(i / 12) * 0.2 }} />
+          ))}
+        </div>
+      </motion.div>
+      {/* the seam */}
+      <motion.div className="absolute inset-y-0 w-px bg-crimson shadow-[0_0_24px_4px_rgba(255,51,102,.6)]" style={{ left }}>
+        <span className="absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-crimson/60 bg-void font-mono text-[10px] text-crimson">⟷</span>
+      </motion.div>
+    </div>
   );
 }
 
@@ -159,8 +174,8 @@ export function Portals() {
         {MODULES.map((m, i) => (
           <Reveal key={m.href} i={i} className={m.span}>
             <Link href={m.href} className="block h-full" data-ghost={`clicked module ${m.n} → intent: ${m.title.toLowerCase()}`}>
-              <motion.div whileHover={{ y: -4 }} whileTap={{ scale: 0.99 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="h-full">
-                <Card className="group flex h-full min-h-[280px] flex-col justify-between overflow-hidden p-7">
+              <Tilt className="h-full">
+                <Card className="group flex h-full min-h-[280px] flex-col justify-between overflow-hidden rounded-2xl p-7">
                   <div className="flex items-start justify-between">
                     <span className={cn("font-mono text-[11px] tracking-[0.2em]", toneText[m.tone])}>{m.n}</span>
                     <div className="flex items-start gap-4">
@@ -177,7 +192,7 @@ export function Portals() {
                     <p className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-2">{m.body}</p>
                   </div>
                 </Card>
-              </motion.div>
+              </Tilt>
             </Link>
           </Reveal>
         ))}
@@ -302,15 +317,30 @@ export function Proof() {
   );
 }
 
-/* ── closing ── */
+/* ── closing: the line assembles as you scroll into it ── */
 export function Closing() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
+  const p = useSpring(scrollYProgress, { stiffness: 90, damping: 24 });
+  const spacing = useTransform(p, [0, 1], ["0.35em", "-0.035em"]);
+  const blur = useTransform(p, [0, 0.8], ["blur(14px)", "blur(0px)"]);
+  const opacity = useTransform(p, [0, 0.6], [0, 1]);
+  const scale = useTransform(p, [0, 1], [1.25, 1]);
+  const beam = useTransform(p, [0.4, 1], ["0%", "100%"]);
   return (
-    <Section className="py-28 text-center">
-      <h2 className="mx-auto max-w-4xl font-display text-[clamp(2.4rem,6vw,5.4rem)] font-extrabold leading-[0.92] tracking-[-0.035em]">
-        <Redacted>Privacy isn&apos;t hiding.</Redacted>
-        <br />
-        <Redacted delay={0.15} className="font-serif font-normal italic text-cyan text-glow-cyan">It&apos;s choosing who knows.</Redacted>
-      </h2>
+    <Section className="relative overflow-hidden py-40 text-center">
+      <div ref={ref} className="relative">
+        <motion.div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[60vmin] w-[60vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan/10 blur-[100px]" style={{ opacity }} />
+        <motion.h2
+          style={{ letterSpacing: spacing, filter: blur, opacity, scale }}
+          className="mx-auto max-w-5xl font-display text-[clamp(2.4rem,6vw,5.4rem)] font-extrabold leading-[0.92]"
+        >
+          Privacy isn&apos;t hiding.
+          <br />
+          <span className="font-serif font-normal italic tracking-normal text-cyan text-glow-cyan">It&apos;s choosing who knows.</span>
+        </motion.h2>
+        <motion.div aria-hidden className="mx-auto mt-10 h-px max-w-xl bg-gradient-to-r from-transparent via-cyan to-transparent" style={{ width: beam }} />
+      </div>
       <Reveal i={2}>
         <div className="mt-10 flex flex-wrap justify-center gap-3">
           <Link href="/defense" className="rounded-full bg-lime px-6 py-3 font-mono text-[12px] uppercase tracking-[0.16em] text-void transition hover:brightness-110">

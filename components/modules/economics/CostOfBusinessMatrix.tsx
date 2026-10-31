@@ -1,9 +1,9 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useMemo, useRef, useState } from "react";
+import { animate, motion, useInView, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
-import { Counter, Source, Tag, ease } from "@/components/ui";
+import { Counter, Source, Tag } from "@/components/ui";
 import { META_FINES, META_FINES_TOTAL, META_NET_INCOME_2025, META_REVENUE_2025, daysOf, money, pct } from "./data";
 
 type Base = "rev" | "ni";
@@ -41,6 +41,42 @@ export function CostOfBusinessMatrix() {
 
   const totalCells = blocks.reduce((a, b) => a + b.n, 0);
   const rows = Math.ceil(totalCells / GRID);
+  const reduce = useReducedMotion();
+
+  /* diagonal cascade: a stepped frontier sweeps top-left → bottom-right, one cell at a time per row */
+  const front = useMotionValue(0);
+  const SLANT = 6; // each row starts this many cells later than the one above
+  const span = GRID + rows * SLANT;
+  useEffect(() => {
+    if (!inView) return;
+    if (reduce) {
+      front.set(span);
+      return;
+    }
+    front.set(0);
+    const c = animate(front, span, { duration: 1.6 + rows * 0.05, ease: [0.33, 0, 0.2, 1], delay: 0.2 });
+    return () => c.stop();
+  }, [inView, base, span, rows, reduce, front]);
+  const revealD = useTransform(front, (f) => {
+    let d = "";
+    for (let r = 0; r < rows; r++) {
+      const cells = Math.max(0, Math.min(GRID, Math.floor(f - r * SLANT)));
+      if (cells > 0) d += `M0 ${r * CELL}h${cells * CELL}v${CELL}h-${cells * CELL}z`;
+    }
+    return d || "M0 0h0v0z";
+  });
+  // hot leading edge: the newest ~3 cells of each row flash white as they land
+  const edgeD = useTransform(front, (f) => {
+    let d = "";
+    for (let r = 0; r < rows; r++) {
+      const cells = Math.floor(f - r * SLANT);
+      if (cells <= 0 || cells >= GRID + 3) continue;
+      const a = Math.max(0, cells - 3);
+      const b = Math.min(GRID, cells);
+      if (b > a) d += `M${a * CELL} ${r * CELL}h${(b - a) * CELL}v${CELL}h-${(b - a) * CELL}z`;
+    }
+    return d || "M0 0h0v0z";
+  });
   const totalPct = pct(META_FINES_TOTAL, baseAmt);
   const totalDays = daysOf(META_FINES_TOTAL, baseAmt);
   const baseWord = base === "rev" ? "revenue" : "net income";
@@ -85,16 +121,11 @@ export function CostOfBusinessMatrix() {
                 <rect width={CELL - GAP} height={CELL - GAP} fill="rgba(255,255,255,0.075)" />
               </pattern>
               <clipPath id="kyd-waffle-reveal">
-                <motion.rect
-                  key={base}
-                  x={0}
-                  y={0}
-                  width={SIZE}
-                  initial={{ height: 0 }}
-                  animate={{ height: inView ? rows * CELL : 0 }}
-                  transition={{ duration: 1.4 + rows * 0.03, ease, delay: 0.2 }}
-                />
+                <motion.path d={revealD} />
               </clipPath>
+              <pattern id="kyd-waffle-hot" width={CELL} height={CELL} patternUnits="userSpaceOnUse">
+                <rect width={CELL - GAP} height={CELL - GAP} fill="#fff" />
+              </pattern>
             </defs>
             <rect width={SIZE} height={SIZE} fill="url(#kyd-waffle)" />
             <g clipPath="url(#kyd-waffle-reveal)">
@@ -108,6 +139,8 @@ export function CostOfBusinessMatrix() {
                 />
               ))}
             </g>
+            {/* glowing leading edge of the cascade */}
+            {!reduce && <motion.path d={edgeD} fill="url(#kyd-waffle-hot)" opacity={0.55} style={{ filter: "drop-shadow(0 0 4px #ff3366)" }} />}
           </svg>
           {/* floating legend */}
           <div className="pointer-events-none absolute bottom-4 right-4 rounded-lg border border-line bg-void/85 px-3 py-2 text-right backdrop-blur sm:bottom-6 sm:right-6">
@@ -143,7 +176,7 @@ export function CostOfBusinessMatrix() {
               className="absolute inset-y-0 left-0 bg-crimson"
               initial={{ width: 0 }}
               animate={{ width: inView ? `${totalPct}%` : 0 }}
-              transition={{ duration: 1.2, ease, delay: 0.4 }}
+              transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 70, damping: 9, delay: 0.4 }}
               style={{ boxShadow: "0 0 18px rgba(255,51,102,.6)" }}
             />
           </div>
@@ -180,7 +213,7 @@ export function CostOfBusinessMatrix() {
                         style={{ background: b.shade }}
                         initial={{ width: 0 }}
                         animate={{ width: inView ? `${p}%` : 0 }}
-                        transition={{ duration: 0.9, ease, delay: 0.5 }}
+                        transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 90, damping: 10, delay: 0.5 + blocks.indexOf(b) * 0.07 }}
                       />
                     </div>
                     <span className="w-14 shrink-0 text-right font-mono text-[11px] text-crimson tabular-nums">{p.toFixed(p < 1 ? 2 : 1)}%</span>

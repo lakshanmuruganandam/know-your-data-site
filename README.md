@@ -11,6 +11,15 @@ Every page has two layers: the one you read, and the one that reads you.
 - **Shadow Profile dock.** A dossier built in the tab from your real browser (timezone, GPU, canvas hash, screen, languages, GPC…). It shows a live illustrative CPM "auction price" and an identifiability estimate in bits. Completing the steps in the Defense toolkit redacts fields, and the price drops.
 - **Proof, not promises.** The home page reads the Performance API live to show 0 cookies and 0 third-party requests.
 
+## Cinematic layer
+
+- **Cold open:** the first visit in each session plays a terminal that reads your fingerprint, then "SUBJECT IDENTIFIED", then the screen tears away in shutters. You can skip it.
+- **Hero:** a raw-WebGL "data ocean" shader. Crimson currents converge on you, the cursor shield glows cyan, and the camera dollies as you scroll.
+- **"The 200 milliseconds after you click":** a 600vh scroll-scrubbed film in six chapters (click → pixel → auction → broker → breach → shield), built from your own browser data.
+- **Route cuts:** redaction-bar wipes with a chapter card. Headlines decrypt out of glyph noise, buttons are magnetic, and cards tilt in 3D under a spotlight.
+- **Per-module motion:** CRT console, 3D folder cabinet, printer-fed legal letters, odometers, armour shards, glitch strikes.
+- **Reduced motion:** everything respects `prefers-reduced-motion`, falling back to still frames or a storyboard.
+
 ## Modules
 
 | Route | Module |

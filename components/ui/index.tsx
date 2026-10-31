@@ -1,6 +1,6 @@
 "use client";
 
-import { animate, motion, useInView, useMotionValue, useTransform } from "framer-motion";
+import { animate, motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Check, Copy, Download } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -66,6 +66,54 @@ export function Redacted({ children, delay = 0, className, bar = "bg-ink" }: { c
   );
 }
 
+/* ── Decrypt: each word rises from a mask while its letters resolve out of glyph noise ── */
+const NOISE = "!<>-_\\/[]{}—=+*^?#01▓▒░ABCDEFX";
+export function Decrypt({ text, delay = 0, className }: { text: string; delay?: number; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-5% 0px" });
+  const words = text.split(" ");
+  useEffect(() => {
+    const root = ref.current;
+    if (!inView || !root || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const spans = [...root.querySelectorAll<HTMLSpanElement>("[data-w]")];
+    const start = performance.now() + delay * 1000;
+    let raf = 0;
+    const tick = (t: number) => {
+      let busy = false;
+      spans.forEach((el, wi) => {
+        const word = el.dataset.w!;
+        const p = Math.max(0, Math.min(1, (t - start - wi * 90) / 650));
+        if (p < 1) busy = true;
+        const fixed = Math.floor(p * word.length);
+        let out = word.slice(0, fixed);
+        for (let i = fixed; i < word.length; i++) out += NOISE[(Math.random() * NOISE.length) | 0];
+        el.textContent = out;
+      });
+      if (busy) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, delay]);
+  return (
+    <span ref={ref} aria-label={text} className={className}>
+      {words.map((w, i) => (
+        <span key={i} aria-hidden className="inline-block overflow-hidden pb-[0.08em] align-bottom">
+          <motion.span
+            data-w={w}
+            className="inline-block"
+            initial={{ y: "110%", rotate: 4 }}
+            animate={inView ? { y: 0, rotate: 0 } : {}}
+            transition={{ delay: delay + i * 0.08, duration: 0.9, ease }}
+          >
+            {w}
+          </motion.span>
+          {i < words.length - 1 && "\u00a0"}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 /* ── Page header used by every module page ── */
 export function PageHeader({ index, kicker, title, accent, lede, tone = "cyan" }: { index: string; kicker: string; title: string; accent?: string; lede: ReactNode; tone?: Tone }) {
   return (
@@ -75,7 +123,7 @@ export function PageHeader({ index, kicker, title, accent, lede, tone = "cyan" }
         {index} — {kicker}
       </Tag>
       <h1 className="mt-6 max-w-5xl font-display text-[clamp(2.6rem,7vw,6.2rem)] font-extrabold leading-[0.92] tracking-[-0.03em]">
-        <Redacted>{title}</Redacted>
+        <Decrypt text={title} />
         {accent && (
           <>
             {" "}
@@ -181,16 +229,80 @@ export function Button({ children, onClick, href, tone = "cyan", variant = "soli
       {children}
     </>
   );
-  if (href)
-    return (
-      <motion.span whileTap={{ scale: 0.97 }} className="inline-flex">
-        <Link href={href} className={cls}>{inner}</Link>
-      </motion.span>
-    );
   return (
-    <motion.button type={type} whileTap={{ scale: 0.97 }} onClick={onClick} disabled={disabled} className={cls}>
-      {inner}
-    </motion.button>
+    <Magnetic>
+      {href ? (
+        <motion.span whileTap={{ scale: 0.97 }} className="inline-flex">
+          <Link href={href} className={cls}>{inner}</Link>
+        </motion.span>
+      ) : (
+        <motion.button type={type} whileTap={{ scale: 0.97 }} onClick={onClick} disabled={disabled} className={cls}>
+          {inner}
+        </motion.button>
+      )}
+    </Magnetic>
+  );
+}
+
+/* ── Tilt: 3D card that follows the pointer with a moving spotlight ── */
+export function Tilt({ children, className, max = 8 }: { children: ReactNode; className?: string; max?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rx = useSpring(0, { stiffness: 180, damping: 18 });
+  const ry = useSpring(0, { stiffness: 180, damping: 18 });
+  const mx = useMotionValue(50);
+  const my = useMotionValue(50);
+  const glow = useTransform([mx, my], ([x, y]) => `radial-gradient(420px circle at ${x}% ${y}%, rgba(0,242,254,.10), transparent 60%)`);
+  return (
+    <div className={cn("[perspective:1100px]", className)}>
+      <motion.div
+        ref={ref}
+        className="relative h-full [transform-style:preserve-3d]"
+        style={{ rotateX: rx, rotateY: ry }}
+        onPointerMove={(e) => {
+          if (e.pointerType !== "mouse") return;
+          const r = ref.current!.getBoundingClientRect();
+          const px = (e.clientX - r.left) / r.width;
+          const py = (e.clientY - r.top) / r.height;
+          ry.set((px - 0.5) * max * 2);
+          rx.set(-(py - 0.5) * max * 2);
+          mx.set(px * 100);
+          my.set(py * 100);
+        }}
+        onPointerLeave={() => {
+          rx.set(0);
+          ry.set(0);
+        }}
+      >
+        {children}
+        <motion.div aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit]" style={{ background: glow }} />
+      </motion.div>
+    </div>
+  );
+}
+
+/* ── Magnetic: element leans toward the cursor, springs back on leave ── */
+export function Magnetic({ children, strength = 0.28 }: { children: ReactNode; strength?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const x = useSpring(0, { stiffness: 220, damping: 16, mass: 0.4 });
+  const y = useSpring(0, { stiffness: 220, damping: 16, mass: 0.4 });
+  return (
+    <motion.span
+      ref={ref}
+      className="inline-flex"
+      style={{ x, y }}
+      onPointerMove={(e) => {
+        if (e.pointerType !== "mouse") return;
+        const r = ref.current!.getBoundingClientRect();
+        x.set((e.clientX - r.left - r.width / 2) * strength);
+        y.set((e.clientY - r.top - r.height / 2) * strength);
+      }}
+      onPointerLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+    >
+      {children}
+    </motion.span>
   );
 }
 
