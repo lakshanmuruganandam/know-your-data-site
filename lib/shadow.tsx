@@ -200,7 +200,9 @@ export function ShadowProvider({ children }: { children: React.ReactNode }) {
     collect().then((f) => alive && setFields((prev) => mergeFields(f, prev)));
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setRedacted(new Set(JSON.parse(raw)));
+      // stored state is untrusted: keep only short id strings
+      const ids: unknown = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(ids)) setRedacted(new Set(ids.filter((v): v is string => typeof v === "string" && v.length < 40).slice(0, 64)));
     } catch {}
     return () => {
       alive = false;

@@ -50,7 +50,9 @@ export function Toolkit() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setChecked(new Set(JSON.parse(raw) as string[]));
+      // stored state is untrusted: keep only short id strings
+      const ids: unknown = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(ids)) setChecked(new Set(ids.filter((v): v is string => typeof v === "string" && v.length < 40).slice(0, 200)));
       const o = localStorage.getItem(OPEN_KEY);
       if (o) setOpen(o === "none" ? null : o);
     } catch {}

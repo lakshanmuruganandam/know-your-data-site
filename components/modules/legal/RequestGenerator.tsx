@@ -214,13 +214,13 @@ export function RequestGenerator() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           <Field label="Full name">
-            {(id) => <input id={id} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Aisha Al Mansoori" autoComplete="off" data-ghost="name typed locally → identity resolution: unavailable" />}
+            {(id) => <input id={id} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="Aisha Al Mansoori" maxLength={120} autoComplete="off" data-ghost="name typed locally → identity resolution: unavailable" />}
           </Field>
           <Field label="Account email / ID">
-            {(id) => <input id={id} className={inputCls} value={account} onChange={(e) => setAccount(e.target.value)} placeholder="you@example.com" autoComplete="off" data-ghost="hashed-email capture attempt → no beacon on page" />}
+            {(id) => <input id={id} className={inputCls} value={account} onChange={(e) => setAccount(e.target.value)} placeholder="you@example.com" maxLength={160} autoComplete="off" data-ghost="hashed-email capture attempt → no beacon on page" />}
           </Field>
           <Field label="Target company">
-            {(id) => <input id={id} className={inputCls} value={company} onChange={(e) => setCompany(e.target.value)} placeholder="e.g. a delivery app" autoComplete="off" data-ghost="target brand typed → churn-risk flag (if we could see it)" />}
+            {(id) => <input id={id} className={inputCls} value={company} onChange={(e) => setCompany(e.target.value)} placeholder="e.g. a delivery app" maxLength={120} autoComplete="off" data-ghost="target brand typed → churn-risk flag (if we could see it)" />}
           </Field>
           <Field label="Privacy email" hint="optional">
             {(id) => (
@@ -231,6 +231,7 @@ export function RequestGenerator() {
                 value={privacyEmail}
                 onChange={(e) => setPrivacyEmail(e.target.value)}
                 placeholder="privacy@ or dpo@company"
+                maxLength={160}
                 autoComplete="off"
                 aria-invalid={!emailOk}
                 data-ghost="dpo@ address → request bypasses support chatbot"

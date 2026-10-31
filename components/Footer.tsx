@@ -6,7 +6,7 @@ import { FooterMark } from "@/components/FooterMark";
 export function Footer() {
   return (
     <footer className="relative mt-24 border-t border-line">
-      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-8 md:grid-cols-[1.4fr_1fr]">
         <div>
           <div className="flex items-center gap-2">
             <Logo size={26} />
@@ -32,14 +32,6 @@ export function Footer() {
               </li>
             ))}
           </ul>
-        </div>
-        <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-3">Built by</div>
-          <p className="mt-4 text-sm text-ink-2">Lakshan Muruganandam · Aditya Rajan Sharma · Krishna</p>
-          <div className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] text-ink-3">Research cohort</div>
-          <p className="mt-4 text-sm leading-relaxed text-ink-2">
-            Case studies — Anesh, Divisha, Divya Nukala, Krishna Gaur. Economics — Saatvik, Divyam, Gauri. Strategies — Lakshan, Farha, Sumayya.
-          </p>
         </div>
       </div>
       <FooterMark />

@@ -6,6 +6,10 @@ import { NextResponse, type NextRequest } from "next/server";
  * even if something ever slipped into the markup.
  */
 export function middleware(request: NextRequest) {
+  // a static site only ever needs to be read — refuse anything that tries to write (no server actions, no forms posting here)
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return new NextResponse(null, { status: 405, headers: { Allow: "GET, HEAD" } });
+  }
   const nonce = btoa(crypto.randomUUID());
   const dev = process.env.NODE_ENV !== "production";
   const csp = [

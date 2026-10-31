@@ -25,12 +25,12 @@ export const viewport: Viewport = { themeColor: "#07080B", colorScheme: "dark" }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // reading the request makes every page render per-request, so Next stamps its scripts with the CSP nonce
-  await headers();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="en" className={`${syne.variable} ${geist.variable} ${mono.variable} ${serif.variable}`}>
       <body className="grain min-h-dvh">
         <noscript>
-          <style>{"#kyd-intro{display:none}"}</style>
+          <style nonce={nonce}>{"#kyd-intro{display:none}"}</style>
         </noscript>
         <div aria-hidden className="vignette" />
         <Providers>

@@ -89,6 +89,7 @@ export function ToolsExplorer() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search: gmail, wireguard, swiss, passkeys…"
+                maxLength={80}
                 className="w-full rounded-xl border border-line bg-void/70 py-2.5 pl-10 pr-9 text-[14px] text-ink outline-none placeholder:text-ink-3/70 focus:border-cyan/60"
               />
               {q && (

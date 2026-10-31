@@ -244,8 +244,8 @@ export function CostOfBusinessMatrix() {
 
 function BigStat({ label, value, tone = "ink" }: { label: string; value: React.ReactNode; tone?: "ink" | "crimson" | "amber" }) {
   return (
-    <div className="glass min-w-0 rounded-xl p-3 sm:p-4">
-      <p className={cn("font-display text-[clamp(1.25rem,4.5vw,2.1rem)] font-extrabold leading-none tabular-nums", tone === "crimson" ? "text-crimson text-glow-crimson" : tone === "amber" ? "text-amber" : "text-ink")}>
+    <div className="glass @container min-w-0 rounded-xl p-3 sm:p-4">
+      <p className={cn("font-display text-[clamp(0.8rem,min(4.5vw,17.5cqi),2.1rem)] whitespace-nowrap font-extrabold leading-none tabular-nums", tone === "crimson" ? "text-crimson text-glow-crimson" : tone === "amber" ? "text-amber" : "text-ink")}>
         {value}
       </p>
       <p className="mt-2 font-mono text-[9.5px] uppercase leading-snug tracking-[0.14em] text-ink-3">{label}</p>
